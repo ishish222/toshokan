@@ -21,3 +21,15 @@ with gr.Blocks() as dashboard:
             account_label = gr.Label("account", label="Account")
         with gr.Column():
             logout_btn = gr.Button("Logout", link="/logout")
+    
+    with gr.Row():
+        with gr.Tab("Configuration"):
+            gr.Label("Configuration")
+        with gr.Tab("Library"):
+            gr.Label("Exercises")
+            gr.Label("Known kanji")
+            gr.Label("Scheduled kanji")
+        with gr.Tab("Exercises"):
+            gr.Label("Exercises")
+        with gr.Tab("Conversation"):
+            gr.Label("Conversation")
