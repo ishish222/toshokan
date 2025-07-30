@@ -4,7 +4,12 @@ import os
 import gradio as gr
 from gradio_agentchatbot_5 import AgentChatbot, ChatMessage
 from dotenv import load_dotenv, find_dotenv
-from toshokan.frontend.handlers import run_the_aux_chat
+from toshokan.frontend.handlers import (
+    run_the_aux_chat,
+    run_the_conversation_chat,
+    run_the_word_chat,
+    run_the_exercise_chat,
+)
 from toshokan.frontend.models import models
 from toshokan.frontend.config import update_model_name
 
@@ -29,29 +34,58 @@ with gr.Blocks() as dashboard:
             logout_btn = gr.Button("Logout", link="/logout")
 
     with gr.Row():
-        with gr.Tab("Configuration"):
-            current_config = gr.State({
-                'model_name': default_model_name,
-            })
-            model_name_dropdown = gr.Dropdown(
-                choices=list(models.keys()),
-                value=default_model_name,
-                label="Model",
-                info="Select the model to use for the conversation",
-            )
         with gr.Tab("Library"):
-            gr.Label("Exercises")
-            gr.Label("Known kanji")
-            gr.Label("Scheduled kanji")
+            with gr.Accordion("Configuration"):
+                current_config = gr.State({
+                    'model_name': default_model_name,
+                })
+                model_name_dropdown = gr.Dropdown(
+                    choices=list(models.keys()),
+                    value=default_model_name,
+                    label="Model",
+                    info="Select the model to use for the conversation",
+                )
+            with gr.Row():
+                lessons_df = gr.Dataframe()
+                lessons_df_load_btn = gr.Button("Load lessons")
+            with gr.Row():
+                exercise_types_df = gr.Dataframe()
+                exercise_types_df_load_btn = gr.Button("Load exercise types")
+            with gr.Row():
+                known_kanji_df = gr.Textbox()
+                known_kanji_df_load_btn = gr.Button("Load known kanji")
+            with gr.Row():
+                scheduled_kanji_df = gr.Textbox()
+                scheduled_kanji_df_load_btn = gr.Button("Load scheduled kanji")
+            with gr.Row():
+                lessons_included_in_conversation_df = gr.Dropdown()
+                lessons_included_in_conversation_df_load_btn = gr.Button("Load lessons included in conversation")
+
         with gr.Tab("Exercises"):
-            gr.Label("Exercises")
+            with gr.Accordion("Select lesson and exercise type"):
+                with gr.Row():
+                    exercise_dropdown = gr.Dropdown(
+                        choices=["kanji", "vocabulary", "grammar"],
+                        value="kanji",
+                        label="Exercise type",
+                        info="Select the type of exercise to do",
+                    )
+                    exercise_type_dropdown = gr.Dropdown(
+                        choices=["kanji", "vocabulary", "grammar"],
+                        value="kanji",
+                        label="Exercise type",
+                        info="Select the type of exercise to do",
+                    )
+            with gr.Row():
+                exercise_chat = AgentChatbot()
+            with gr.Row():
+                exercise_input = gr.Textbox(label="Input")
         with gr.Tab("Conversation"):
             with gr.Tab("Conversation"):
-                messages = gr.State({})
                 with gr.Row():
-                    chat = AgentChatbot()
+                    conversation_chat = AgentChatbot()
                 with gr.Row():
-                    input = gr.Textbox(label="Input")
+                    conversation_input = gr.Textbox(label="Input")
 
             with gr.Tab("Japanese word"):
                 with gr.Row():
@@ -69,6 +103,24 @@ with gr.Blocks() as dashboard:
         fn=update_model_name,
         inputs=[current_config, model_name_dropdown],
         outputs=current_config,
+    )
+
+    exercise_input.submit(
+        run_the_exercise_chat,
+        inputs=[exercise_input, exercise_chat, current_config],
+        outputs=[exercise_chat, exercise_input]
+    )
+
+    conversation_input.submit(
+        run_the_conversation_chat,
+        inputs=[conversation_input, conversation_chat, current_config],
+        outputs=[conversation_chat, conversation_input]
+    )
+
+    word_input.submit(
+        run_the_word_chat,
+        inputs=[word_input, word_chat, current_config],
+        outputs=[word_chat, word_input]
     )
 
     aux_input.submit(
