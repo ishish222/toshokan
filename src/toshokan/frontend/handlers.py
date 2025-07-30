@@ -12,9 +12,25 @@ from toshokan.frontend.helpers import (
     convert_chat_messages_to_langchain_messages,
 )
 from toshokan.frontend.models import models
+import pandas as pd
 
 
 _ = load_dotenv(find_dotenv())
+
+
+def update_lessons_included_choices(
+    lessons_included_in_conversation_drop: gr.Dropdown,
+    lessons_df: pd.DataFrame,
+):
+    choices = lessons_df['Lesson'].tolist()
+    return gr.Dropdown(choices=choices, value=[], multiselect=True)
+
+
+def update_exercise_lesson_dropdown_values(
+    lessons_df: pd.DataFrame,
+):
+    choices = lessons_df['Lesson'].tolist()
+    return gr.Dropdown(choices=choices, interactive=True)
 
 
 def run_the_exercise_chat(

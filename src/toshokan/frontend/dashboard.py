@@ -9,10 +9,12 @@ from toshokan.frontend.handlers import (
     run_the_conversation_chat,
     run_the_word_chat,
     run_the_exercise_chat,
+    update_lessons_included_choices,
+    update_exercise_lesson_dropdown_values,
 )
 from toshokan.frontend.models import models
 from toshokan.frontend.config import update_model_name
-from toshokan.frontend.state_manager import load_csv_into_df
+from toshokan.frontend.state_manager import load_csv_into_df, load_csv_into_txt
 
 _ = load_dotenv(find_dotenv())
 
@@ -56,36 +58,35 @@ with gr.Blocks() as dashboard:
                     exercise_types_df_load_btn = gr.UploadButton("Load exercise types", file_types=[".csv"])
                 with gr.Row():
                     exercise_types_df = gr.Dataframe(label="Exercise types", headers=["Exercise type", "Description"])
-            with gr.Row():
-                known_kanji_df = gr.Textbox()
-                known_kanji_df_load_btn = gr.Button("Load known kanji")
-            with gr.Row():
-                scheduled_kanji_df = gr.Textbox()
-                scheduled_kanji_df_load_btn = gr.Button("Load scheduled kanji")
-            with gr.Row():
-                lessons_included_in_conversation_df = gr.Dropdown()
-                lessons_included_in_conversation_df_load_btn = gr.Button("Load lessons included in conversation")
+            with gr.Accordion("Known kanji"):
+                with gr.Row():
+                    known_kanji_txt_load_btn = gr.UploadButton("Load known kanji", file_types=[".csv"])
+                with gr.Row():
+                    known_kanji_txt = gr.Textbox(label="Known kanji")
+            with gr.Accordion("Scheduled kanji"):
+                with gr.Row():
+                    scheduled_kanji_txt_load_btn = gr.UploadButton("Load scheduled kanji", file_types=[".csv"])
+                with gr.Row():
+                    scheduled_kanji_txt = gr.Textbox(label="Scheduled kanji")
 
         with gr.Tab("Exercises"):
             with gr.Accordion("Select lesson and exercise type"):
                 with gr.Row():
-                    exercise_dropdown = gr.Dropdown(
-                        choices=["kanji", "vocabulary", "grammar"],
-                        value="kanji",
-                        label="Exercise type",
-                        info="Select the type of exercise to do",
-                    )
-                    exercise_type_dropdown = gr.Dropdown(
-                        choices=["kanji", "vocabulary", "grammar"],
-                        value="kanji",
-                        label="Exercise type",
-                        info="Select the type of exercise to do",
-                    )
+                    lessons_dropdown = gr.Dropdown(label="Lesson")
+                    exercise_type_dropdown = gr.Dropdown(label="Exercise type")
+
             with gr.Row():
                 exercise_chat = AgentChatbot()
             with gr.Row():
                 exercise_input = gr.Textbox(label="Input")
+
         with gr.Tab("Conversation"):
+            with gr.Accordion("Lessons included in conversation"):
+                with gr.Row():
+                    lessons_included_in_conversation_drop_load_btn = gr.UploadButton("Load lessons included in conversation", file_types=[".csv"])
+                with gr.Row():
+                    lessons_included_in_conversation_drop = gr.Dropdown(label="Lessons included in conversation", multiselect=True)
+
             with gr.Tab("Conversation"):
                 with gr.Row():
                     conversation_chat = AgentChatbot()
@@ -114,12 +115,32 @@ with gr.Blocks() as dashboard:
         fn=load_csv_into_df,
         inputs=[lessons_df_load_btn],
         outputs=[lessons_df],
+    ).then(
+        fn=update_lessons_included_choices,
+        inputs=[lessons_included_in_conversation_drop, lessons_df],
+        outputs=[lessons_included_in_conversation_drop],
+    ).then(
+        fn=update_exercise_lesson_dropdown_values,
+        inputs=[lessons_df],
+        outputs=[lessons_dropdown],
     )
 
     exercise_types_df_load_btn.upload(
         fn=load_csv_into_df,
         inputs=[exercise_types_df_load_btn],
         outputs=[exercise_types_df],
+    )
+
+    known_kanji_txt_load_btn.upload(
+        fn=load_csv_into_txt,
+        inputs=[known_kanji_txt_load_btn],
+        outputs=[known_kanji_txt],
+    )
+
+    scheduled_kanji_txt_load_btn.upload(
+        fn=load_csv_into_txt,
+        inputs=[scheduled_kanji_txt_load_btn],
+        outputs=[scheduled_kanji_txt],
     )
 
     exercise_input.submit(
