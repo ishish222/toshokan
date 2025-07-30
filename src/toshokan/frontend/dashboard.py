@@ -12,6 +12,7 @@ from toshokan.frontend.handlers import (
 )
 from toshokan.frontend.models import models
 from toshokan.frontend.config import update_model_name
+from toshokan.frontend.state_manager import load_csv_into_df
 
 _ = load_dotenv(find_dotenv())
 
@@ -45,12 +46,16 @@ with gr.Blocks() as dashboard:
                     label="Model",
                     info="Select the model to use for the conversation",
                 )
-            with gr.Row():
-                lessons_df = gr.Dataframe()
-                lessons_df_load_btn = gr.Button("Load lessons")
-            with gr.Row():
-                exercise_types_df = gr.Dataframe()
-                exercise_types_df_load_btn = gr.Button("Load exercise types")
+            with gr.Accordion("Lessons"):
+                with gr.Row():
+                    lessons_df_load_btn = gr.UploadButton("Load lessons", file_types=[".csv"])
+                with gr.Row():
+                    lessons_df = gr.Dataframe(label="Lessons", headers=["Lesson", "Description"])
+            with gr.Accordion("Exercise types"):
+                with gr.Row():
+                    exercise_types_df_load_btn = gr.UploadButton("Load exercise types", file_types=[".csv"])
+                with gr.Row():
+                    exercise_types_df = gr.Dataframe(label="Exercise types", headers=["Exercise type", "Description"])
             with gr.Row():
                 known_kanji_df = gr.Textbox()
                 known_kanji_df_load_btn = gr.Button("Load known kanji")
@@ -103,6 +108,18 @@ with gr.Blocks() as dashboard:
         fn=update_model_name,
         inputs=[current_config, model_name_dropdown],
         outputs=current_config,
+    )
+
+    lessons_df_load_btn.upload(
+        fn=load_csv_into_df,
+        inputs=[lessons_df_load_btn],
+        outputs=[lessons_df],
+    )
+
+    exercise_types_df_load_btn.upload(
+        fn=load_csv_into_df,
+        inputs=[exercise_types_df_load_btn],
+        outputs=[exercise_types_df],
     )
 
     exercise_input.submit(
