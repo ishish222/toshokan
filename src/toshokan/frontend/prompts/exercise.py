@@ -22,8 +22,12 @@ Parameters of the exercise:
 </exercise>
 
 Important rules to keep in mind:
+- Student only knows a limited number of kanji (known_kanji).
 - If you're using a kanji that is not in the known_kanji, you need to add hiragana in parenthesis after the kanji.
+- Create tasks in batches of 5 examples (if applicable).
 - Try to use the kanji that are in the scheduled_kanji.
+- The student might need time, don't rush or give away the answer too quickly.
+- In addition to formal correctness, you can add notes about sounding natural.
 """
 
 EXERCISE_USER_PROMPT = """

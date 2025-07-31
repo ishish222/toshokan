@@ -55,6 +55,14 @@ models['openai/gpt-4o'] = ChatOpenRouter(
     }
 )
 
+models['openai/gpt-4o (0.7)'] = ChatOpenRouter(
+    model_name='openai/gpt-4o',
+    temperature=0.7,
+    metadata={
+        'ls_provider': 'openrouter',
+        'ls_model_name': 'openai/gpt-4o'
+    }
+)
 models['openai/gpt-4o-mini-2024-07-18'] = ChatOpenRouter(
     model_name='openai/gpt-4o-mini-2024-07-18',
     temperature=0.0,
