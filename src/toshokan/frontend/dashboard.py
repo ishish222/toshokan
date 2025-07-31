@@ -13,6 +13,7 @@ from toshokan.frontend.handlers import (
     update_exercise_lesson_dropdown_values,
     update_exercise_type_dropdown_choices,
     run_the_exercise_initiate,
+    run_the_conversation_initiate,
 )
 from toshokan.frontend.models import models
 from toshokan.frontend.config import update_model_name
@@ -109,18 +110,24 @@ with gr.Blocks() as dashboard:
                 #     lessons_included_in_conversation_drop_load_btn = gr.UploadButton("Load lessons included in conversation", file_types=[".csv"])
                 with gr.Row():
                     lessons_included_in_conversation_drop = gr.Dropdown(label="Lessons included in conversation", multiselect=True)
+            with gr.Accordion("Formality & situation"):
+                with gr.Row():
+                    formality_radio = gr.Radio(label="Formality", choices=["Formal", "Semi-formal", "Informal"], value="Semi-formal")
                 with gr.Row():
                     conversation_initiate_btn = gr.Button("Initiate conversation")
+                with gr.Row():
+                    conversation_situation = gr.Textbox(label="Situation", interactive=False)
 
             with gr.Tab("Conversation"):
                 with gr.Row():
-                    conversation_notes = gr.Textbox(label="Notes")
-                with gr.Row():
-                    conversation_unknown_kanji = gr.Dataframe(label="Unknown kanji")
-                with gr.Row():
                     conversation_chat = AgentChatbot()
+                with gr.Accordion():
+                    with gr.Row():
+                        conversation_unknown_kanji = gr.Dataframe(label="Unknown kanji", interactive=False)
                 with gr.Row():
-                    conversation_input = gr.Textbox(label="Input", lines=3)
+                    conversation_notes = gr.Textbox(label="Notes", interactive=False)
+                with gr.Row():
+                    conversation_input = gr.Textbox(label="Input", lines=3, interactive=True)
 
             with gr.Tab("Japanese word"):
                 with gr.Row():
@@ -351,14 +358,22 @@ with gr.Blocks() as dashboard:
         outputs=[exercise_chat, exercise_input]
     )
 
+    conversation_initiate_btn.click(
+        fn=run_the_conversation_initiate,
+        inputs=[formality_radio, runtime_config],
+        outputs=[conversation_situation]
+    )
+
     conversation_input.submit(
         run_the_conversation_chat,
         inputs=[
             lessons_included_in_conversation_drop,
+            conversation_situation,
             known_kanji_txt,
             scheduled_kanji_txt,
             conversation_input,
             conversation_chat,
+            formality_radio,
             runtime_config
         ],
         outputs=[

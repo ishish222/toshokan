@@ -1,3 +1,4 @@
+import random
 import gradio as gr
 from dotenv import load_dotenv, find_dotenv
 from langchain_core.messages import (
@@ -14,8 +15,15 @@ from toshokan.frontend.models import models
 import pandas as pd
 
 from toshokan.frontend.prompts.exercise import EXERCISE_SYSTEM_PROMPT
-from toshokan.frontend.prompts.conversation import CONVERSATION_SYSTEM_PROMPT, CONVERSATION_SYSTEM_ALL_KANJI_PROMPT, CONVERSATION_SYSTEM_UNKNOWN_KANJI_PROMPT
-from toshokan.frontend.schema import ConversationResponse, ConversationKanjiResponse, AllKanji
+from toshokan.frontend.prompts.conversation import (
+    CONVERSATION_SYSTEM_PROMPT,
+    CONVERSATION_SYSTEM_ALL_KANJI_PROMPT,
+    CONVERSATION_SYSTEM_UNKNOWN_KANJI_PROMPT,
+    CONVERSATION_SYSTEM_INITIALIZE_PROMPT,
+)
+from toshokan.frontend.prompts.word import WORD_SYSTEM_PROMPT
+from toshokan.frontend.prompts.aux import AUX_SYSTEM_PROMPT
+from toshokan.frontend.schema import ConversationResponse, ConversationKanjiResponse, AllKanji, ConversationSituation
 
 _ = load_dotenv(find_dotenv())
 
@@ -122,6 +130,50 @@ def run_the_exercise_chat(
         return converted_messages, ''
 
 
+def run_the_word_chat(
+    user_input: str,
+    messages: list[AnyMessage],
+    runtime_config: dict,
+):
+    system_prompt = WORD_SYSTEM_PROMPT.format(
+        word=user_input
+    )
+    system_message = SystemMessage(content=system_prompt)
+
+    model = models[runtime_config['model_name']]
+
+    messages = [system_message] + list(convert_chat_messages_to_langchain_messages(messages)) + [HumanMessage(user_input)]
+
+    assistant_message = model.invoke(messages)
+    messages.append(assistant_message)
+
+    converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
+
+    return converted_messages, ''
+
+
+def run_the_aux_chat(
+    user_input: str,
+    messages: list[AnyMessage],
+    runtime_config: dict,
+):
+    system_prompt = AUX_SYSTEM_PROMPT.format(
+        user_input=user_input
+    )
+    system_message = SystemMessage(content=system_prompt)
+
+    model = models[runtime_config['model_name']]
+
+    messages = [system_message] + list(convert_chat_messages_to_langchain_messages(messages)) + [HumanMessage(user_input)]
+
+    assistant_message = model.invoke(messages)
+    messages.append(assistant_message)
+
+    converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
+
+    return converted_messages, ''
+
+
 def detect_all_kanji(
     sentence: str,
     runtime_config: dict,
@@ -184,116 +236,68 @@ def detect_unknown_kanji(
 
 
 def run_the_conversation_initiate(
+    formality: str,
+    runtime_config: dict,
+):
+    system_prompt = CONVERSATION_SYSTEM_INITIALIZE_PROMPT.format(
+        formality=formality
+    )
+
+    system_message = SystemMessage(content=system_prompt)
+    messages = [system_message]
+
+    model = models[runtime_config['model_name']].with_structured_output(ConversationSituation)
+
+    seed = random.randint(0, 2**31-1)
+    # import pdb; pdb.set_trace()
+
+    conversation_situation = model.invoke(messages, seed=seed)
+
+    return conversation_situation.situation
+
+
+def run_the_conversation_chat(
     lessons: str,
+    situation: str,
     known_kanji: str,
     scheduled_kanji: str,
     user_input: str,
+    messages: list[AnyMessage],
+    formality: str,
     runtime_config: dict,
 ):
+    # import pdb; pdb.set_trace()
+
     system_prompt = CONVERSATION_SYSTEM_PROMPT.format(
         lessons=lessons,
+        situation=situation,
         known_kanji=known_kanji,
-        scheduled_kanji=scheduled_kanji
+        scheduled_kanji=scheduled_kanji,
+        formality=formality
     )
 
     model = models[runtime_config['model_name']].with_structured_output(ConversationResponse)
 
     system_message = SystemMessage(content=system_prompt)
+
+    messages = list(convert_chat_messages_to_langchain_messages(messages))
+
     if len(user_input) > 0:
         user_message = HumanMessage(user_input)
-        messages = [system_message, user_message]
+        messages = [system_message] + messages + [user_message]
     else:
-        messages = [system_message]
+        messages = [system_message] + messages
 
     conversation_response = model.invoke(messages)
-    messages = [AIMessage(conversation_response.response)]
+    messages.append(AIMessage(conversation_response.response))
 
     converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
 
     unknown_kanji = detect_unknown_kanji(
-        sentence=conversation_response.response,
-        known_kanji=known_kanji,
-        scheduled_kanji=scheduled_kanji,
-        runtime_config=runtime_config
-    )
-
-    return converted_messages, '', conversation_response.notes, unknown_kanji
-
-
-def run_the_conversation_chat(
-    lessons: str,
-    known_kanji: str,
-    scheduled_kanji: str,
-    user_input: str,
-    messages: list[AnyMessage],
-    runtime_config: dict,
-):
-    # import pdb; pdb.set_trace()
-
-    if len(messages) == 0:
-        # we need to run the initiate conversation
-        return run_the_conversation_initiate(
-            lessons=lessons,
+            sentence=conversation_response.response,
             known_kanji=known_kanji,
             scheduled_kanji=scheduled_kanji,
-            user_input=user_input,
-            runtime_config=runtime_config)
-    else:
-        model = models[runtime_config['model_name']].with_structured_output(ConversationResponse)
+            runtime_config=runtime_config
+        )
 
-        messages = list(convert_chat_messages_to_langchain_messages(messages))
-
-        messages.append(HumanMessage(user_input))
-        input_messages = messages
-
-        conversation_response = model.invoke(input_messages)
-        messages.append(AIMessage(conversation_response.response))
-
-        converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
-
-        unknown_kanji = detect_unknown_kanji(
-                sentence=conversation_response.response,
-                known_kanji=known_kanji,
-                scheduled_kanji=scheduled_kanji,
-                runtime_config=runtime_config
-            )
-
-        return converted_messages, '', conversation_response.notes, unknown_kanji
-
-
-def run_the_word_chat(
-    user_input: str,
-    messages: list[AnyMessage],
-    runtime_config: dict,
-):
-    model = models[runtime_config['model_name']]
-    messages = list(convert_chat_messages_to_langchain_messages(messages))
-
-    messages.append(HumanMessage(user_input))
-    input_messages = messages
-
-    assistant_message = model.invoke(input_messages)
-    messages.append(assistant_message)
-
-    converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
-
-    return converted_messages, ''
-
-
-def run_the_aux_chat(
-    user_input: str,
-    messages: list[AnyMessage],
-    runtime_config: dict,
-):
-    model = models[runtime_config['model_name']]
-    messages = list(convert_chat_messages_to_langchain_messages(messages))
-
-    messages.append(HumanMessage(user_input))
-    input_messages = messages
-
-    assistant_message = model.invoke(input_messages)
-    messages.append(assistant_message)
-
-    converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
-
-    return converted_messages, ''
+    return converted_messages, '', conversation_response.notes, unknown_kanji

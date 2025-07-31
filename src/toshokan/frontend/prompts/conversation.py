@@ -7,22 +7,40 @@ user. You can use the lessons to guide the conversation.
 
 Parameters of the conversation:
 <conversation>
-<lessons>
+<situation>
+{situation}
+</situation>
+<scope_of_practice>
 {lessons}
-</lessons>
+</scope_of_practice>
 <known_kanji>
 {known_kanji}
 </known_kanji>
 <scheduled_kanji>
 {scheduled_kanji}
 </scheduled_kanji>
+<formality>
+{formality}
+</formality>
 </conversation>
 
 Important rules to keep in mind:
-- Student only knows a limited number of kanji (known_kanji).
-- If you're using a kanji that is not in the known_kanji, you need to return the unknown kanji in the response.
+- Try to frame the conversation in a hipothetical situation in which the student could find themselves.
 - Try to incorporate from time to time the kanji that are in the scheduled_kanji.
+- If the formality is formal, you should use more formal language.
+- If the formality is informal, you should use more informal language.
 - In addition to formal correctness, you can add notes about sounding natural.
+"""
+
+CONVERSATION_SYSTEM_INITIALIZE_PROMPT = """
+You are an experienced Japanese teacher. You are working with a student who is learning Japanese.
+
+In this task you are to come up with a hipothetical situation in which the student could find
+themselves to frame a conversation in that context and practice conversation.
+
+<formality>
+{formality}
+</formality>
 """
 
 CONVERSATION_SYSTEM_ALL_KANJI_PROMPT = """
@@ -33,6 +51,8 @@ In this task you are given a sentence in Japanese. Your task is to return a list
 <sentence>
 {sentence}
 </sentence>
+
+Remove any duplicates from the list.
 """
 
 CONVERSATION_SYSTEM_UNKNOWN_KANJI_WORDS_PROMPT = """

@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field
 
 
+class ConversationSituation(BaseModel):
+    situation: str = Field(description="The situation in which the student could find themselves")
+
+
 class UnknownKanji(BaseModel):
     kanji: str = Field(description="The work using unknown kanji")
     hiragana: str = Field(description="The hiragana of the unknown kanji")
