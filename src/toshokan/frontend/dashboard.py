@@ -47,6 +47,13 @@ with gr.Blocks() as dashboard:
 
     with gr.Row():
         with gr.Tab("Library"):
+
+            with gr.Accordion("Configuration save/load"):
+                with gr.Row():
+                    config_load_btn = gr.UploadButton("Load configuration", file_types=[".json"])
+                with gr.Row():
+                    config_save_btn = gr.DownloadButton("Save configuration")
+
             with gr.Accordion("Configuration"):
                 runtime_config = gr.State({
                     'model_name': default_model_name,
@@ -83,12 +90,6 @@ with gr.Blocks() as dashboard:
                 with gr.Row():
                     scheduled_kanji_txt = gr.Textbox(label="Scheduled kanji")
 
-            with gr.Accordion("Configuration save/load"):
-                with gr.Row():
-                    config_save_btn = gr.DownloadButton("Save configuration")
-                with gr.Row():
-                    config_load_btn = gr.UploadButton("Load configuration", file_types=[".json"])
-
         with gr.Tab("Exercises"):
             with gr.Accordion("Select lesson and exercise type"):
                 with gr.Row():
@@ -113,9 +114,13 @@ with gr.Blocks() as dashboard:
 
             with gr.Tab("Conversation"):
                 with gr.Row():
+                    conversation_notes = gr.Textbox(label="Notes")
+                with gr.Row():
+                    conversation_unknown_kanji = gr.Dataframe(label="Unknown kanji")
+                with gr.Row():
                     conversation_chat = AgentChatbot()
                 with gr.Row():
-                    conversation_input = gr.Textbox(label="Input")
+                    conversation_input = gr.Textbox(label="Input", lines=3)
 
             with gr.Tab("Japanese word"):
                 with gr.Row():
@@ -356,7 +361,12 @@ with gr.Blocks() as dashboard:
             conversation_chat,
             runtime_config
         ],
-        outputs=[conversation_chat, conversation_input]
+        outputs=[
+            conversation_chat,
+            conversation_input,
+            conversation_notes,
+            conversation_unknown_kanji
+        ]
     )
 
     word_input.submit(
