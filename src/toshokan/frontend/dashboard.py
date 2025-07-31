@@ -150,14 +150,6 @@ with gr.Blocks() as dashboard:
         inputs=[lessons_df_load_btn],
         outputs=[lessons_df],
     ).then(
-        fn=update_lessons_included_choices_values,
-        inputs=[lessons_df, lessons_df_selected_for_conversation],
-        outputs=[lessons_included_in_conversation_drop],
-    ).then(
-        fn=update_exercise_lesson_dropdown_values,
-        inputs=[lessons_df],
-        outputs=[lessons_dropdown],
-    ).then(
         fn=save_config,
         inputs=[runtime_config,
                 lessons_df,
@@ -193,10 +185,6 @@ with gr.Blocks() as dashboard:
         fn=load_csv_into_df_lessons_selected_for_conversation,
         inputs=[lessons_df_selected_for_conversation_load_btn],
         outputs=[lessons_df_selected_for_conversation],
-    ).then(
-        fn=update_lessons_included_choices_values,
-        inputs=[lessons_included_in_conversation_drop, lessons_df_selected_for_conversation],
-        outputs=[lessons_included_in_conversation_drop],
     ).then(
         fn=save_config,
         inputs=[runtime_config,
@@ -360,7 +348,14 @@ with gr.Blocks() as dashboard:
 
     conversation_input.submit(
         run_the_conversation_chat,
-        inputs=[conversation_input, conversation_chat, runtime_config],
+        inputs=[
+            lessons_included_in_conversation_drop,
+            known_kanji_txt,
+            scheduled_kanji_txt,
+            conversation_input,
+            conversation_chat,
+            runtime_config
+        ],
         outputs=[conversation_chat, conversation_input]
     )
 
