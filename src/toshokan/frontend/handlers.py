@@ -18,12 +18,16 @@ import pandas as pd
 _ = load_dotenv(find_dotenv())
 
 
-def update_lessons_included_choices(
-    lessons_included_in_conversation_drop: gr.Dropdown,
+def update_lessons_included_choices_values(
     lessons_df: pd.DataFrame,
+    lessons_df_selected_for_conversation: pd.DataFrame,
 ):
     choices = lessons_df['Lesson'].tolist()
-    return gr.Dropdown(choices=choices, value=[], multiselect=True)
+
+    # for values we need to check if the lesson is in the lessons_df_selected_for_conversation
+    values = [lesson for lesson in choices if lesson in lessons_df_selected_for_conversation['Lesson'].tolist()]
+
+    return gr.Dropdown(choices=choices, value=values, multiselect=True)
 
 
 def update_exercise_lesson_dropdown_values(
