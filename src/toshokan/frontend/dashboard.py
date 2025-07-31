@@ -9,9 +9,21 @@ from toshokan.frontend.handlers import (
     run_the_conversation_chat,
     run_the_word_chat,
     run_the_exercise_chat,
+    update_lessons_included_choices_values,
+    update_exercise_lesson_dropdown_values,
+    update_exercise_type_dropdown_choices,
+    run_the_exercise_initiate,
 )
 from toshokan.frontend.models import models
 from toshokan.frontend.config import update_model_name
+from toshokan.frontend.state_manager import (
+    load_csv_into_df_lessons,
+    load_csv_into_df_exercise_types,
+    load_csv_into_df_lessons_selected_for_conversation,
+    load_csv_into_txt,
+    save_config,
+    load_config,
+)
 
 _ = load_dotenv(find_dotenv())
 
@@ -36,7 +48,7 @@ with gr.Blocks() as dashboard:
     with gr.Row():
         with gr.Tab("Library"):
             with gr.Accordion("Configuration"):
-                current_config = gr.State({
+                runtime_config = gr.State({
                     'model_name': default_model_name,
                 })
                 model_name_dropdown = gr.Dropdown(
@@ -45,42 +57,60 @@ with gr.Blocks() as dashboard:
                     label="Model",
                     info="Select the model to use for the conversation",
                 )
-            with gr.Row():
-                lessons_df = gr.Dataframe()
-                lessons_df_load_btn = gr.Button("Load lessons")
-            with gr.Row():
-                exercise_types_df = gr.Dataframe()
-                exercise_types_df_load_btn = gr.Button("Load exercise types")
-            with gr.Row():
-                known_kanji_df = gr.Textbox()
-                known_kanji_df_load_btn = gr.Button("Load known kanji")
-            with gr.Row():
-                scheduled_kanji_df = gr.Textbox()
-                scheduled_kanji_df_load_btn = gr.Button("Load scheduled kanji")
-            with gr.Row():
-                lessons_included_in_conversation_df = gr.Dropdown()
-                lessons_included_in_conversation_df_load_btn = gr.Button("Load lessons included in conversation")
+            with gr.Accordion("Lessons"):
+                with gr.Row():
+                    lessons_df_load_btn = gr.UploadButton("Load lessons", file_types=[".csv"])
+                with gr.Row():
+                    lessons_df = gr.Dataframe(label="Lessons", headers=["Lesson", "Description"])
+            with gr.Accordion("Lessons selected for conversation"):
+                with gr.Row():
+                    lessons_df_selected_for_conversation_load_btn = gr.UploadButton("Load lessons selected for conversation", file_types=[".csv"])
+                with gr.Row():
+                    lessons_df_selected_for_conversation = gr.Dataframe(label="Lessons selected for conversation", headers=["Lesson", "Description"])
+            with gr.Accordion("Exercise types"):
+                with gr.Row():
+                    exercise_types_df_load_btn = gr.UploadButton("Load exercise types", file_types=[".csv"])
+                with gr.Row():
+                    exercise_types_df = gr.Dataframe(label="Exercise types", headers=["Exercise type", "Description"])
+            with gr.Accordion("Known kanji"):
+                with gr.Row():
+                    known_kanji_txt_load_btn = gr.UploadButton("Load known kanji", file_types=[".csv"])
+                with gr.Row():
+                    known_kanji_txt = gr.Textbox(label="Known kanji")
+            with gr.Accordion("Scheduled kanji"):
+                with gr.Row():
+                    scheduled_kanji_txt_load_btn = gr.UploadButton("Load scheduled kanji", file_types=[".csv"])
+                with gr.Row():
+                    scheduled_kanji_txt = gr.Textbox(label="Scheduled kanji")
+
+            with gr.Accordion("Configuration save/load"):
+                with gr.Row():
+                    config_save_btn = gr.DownloadButton("Save configuration")
+                with gr.Row():
+                    config_load_btn = gr.UploadButton("Load configuration", file_types=[".json"])
 
         with gr.Tab("Exercises"):
             with gr.Accordion("Select lesson and exercise type"):
                 with gr.Row():
-                    exercise_dropdown = gr.Dropdown(
-                        choices=["kanji", "vocabulary", "grammar"],
-                        value="kanji",
-                        label="Exercise type",
-                        info="Select the type of exercise to do",
-                    )
-                    exercise_type_dropdown = gr.Dropdown(
-                        choices=["kanji", "vocabulary", "grammar"],
-                        value="kanji",
-                        label="Exercise type",
-                        info="Select the type of exercise to do",
-                    )
+                    lessons_dropdown = gr.Dropdown(label="Lesson")
+                    exercise_type_dropdown = gr.Dropdown(label="Exercise type")
+                with gr.Row():
+                    exercise_initiate_btn = gr.Button("Initiate exercise")
+
             with gr.Row():
                 exercise_chat = AgentChatbot()
             with gr.Row():
                 exercise_input = gr.Textbox(label="Input")
+
         with gr.Tab("Conversation"):
+            with gr.Accordion("Lessons included in conversation"):
+                # with gr.Row():
+                #     lessons_included_in_conversation_drop_load_btn = gr.UploadButton("Load lessons included in conversation", file_types=[".csv"])
+                with gr.Row():
+                    lessons_included_in_conversation_drop = gr.Dropdown(label="Lessons included in conversation", multiselect=True)
+                with gr.Row():
+                    conversation_initiate_btn = gr.Button("Initiate conversation")
+
             with gr.Tab("Conversation"):
                 with gr.Row():
                     conversation_chat = AgentChatbot()
@@ -101,30 +131,247 @@ with gr.Blocks() as dashboard:
 
     model_name_dropdown.select(
         fn=update_model_name,
-        inputs=[current_config, model_name_dropdown],
-        outputs=current_config,
+        inputs=[runtime_config, model_name_dropdown],
+        outputs=runtime_config,
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    lessons_df_load_btn.upload(
+        fn=load_csv_into_df_lessons,
+        inputs=[lessons_df_load_btn],
+        outputs=[lessons_df],
+    ).then(
+        fn=update_lessons_included_choices_values,
+        inputs=[lessons_df, lessons_df_selected_for_conversation],
+        outputs=[lessons_included_in_conversation_drop],
+    ).then(
+        fn=update_exercise_lesson_dropdown_values,
+        inputs=[lessons_df],
+        outputs=[lessons_dropdown],
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    lessons_df.change(
+        fn=update_lessons_included_choices_values,
+        inputs=[lessons_df, lessons_df_selected_for_conversation],
+        outputs=[lessons_included_in_conversation_drop],
+    ).then(
+        fn=update_exercise_lesson_dropdown_values,
+        inputs=[lessons_df],
+        outputs=[lessons_dropdown],
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    lessons_df_selected_for_conversation_load_btn.upload(
+        fn=load_csv_into_df_lessons_selected_for_conversation,
+        inputs=[lessons_df_selected_for_conversation_load_btn],
+        outputs=[lessons_df_selected_for_conversation],
+    ).then(
+        fn=update_lessons_included_choices_values,
+        inputs=[lessons_included_in_conversation_drop, lessons_df_selected_for_conversation],
+        outputs=[lessons_included_in_conversation_drop],
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    lessons_df_selected_for_conversation.change(
+        fn=update_lessons_included_choices_values,
+        inputs=[lessons_df, lessons_df_selected_for_conversation],
+        outputs=[lessons_included_in_conversation_drop],
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    exercise_types_df_load_btn.upload(
+        fn=load_csv_into_df_exercise_types,
+        inputs=[exercise_types_df_load_btn],
+        outputs=[exercise_types_df],
+    ).then(
+        fn=update_exercise_type_dropdown_choices,
+        inputs=[exercise_types_df],
+        outputs=[exercise_type_dropdown],
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    exercise_types_df.change(
+        fn=update_exercise_type_dropdown_choices,
+        inputs=[exercise_types_df],
+        outputs=[exercise_type_dropdown],
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    known_kanji_txt_load_btn.upload(
+        fn=load_csv_into_txt,
+        inputs=[known_kanji_txt_load_btn],
+        outputs=[known_kanji_txt],
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    scheduled_kanji_txt_load_btn.upload(
+        fn=load_csv_into_txt,
+        inputs=[scheduled_kanji_txt_load_btn],
+        outputs=[scheduled_kanji_txt],
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    # recreating the save file
+    # this is a hack to mitigate broken downloads
+
+    config_save_btn.click(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    config_load_btn.upload(
+        fn=load_config,
+        inputs=[config_load_btn],
+        outputs=[
+            runtime_config,
+            lessons_df,
+            lessons_df_selected_for_conversation,
+            exercise_types_df,
+            known_kanji_txt,
+            scheduled_kanji_txt
+        ],
+    ).then(
+        fn=save_config,
+        inputs=[runtime_config,
+                lessons_df,
+                lessons_df_selected_for_conversation,
+                exercise_types_df,
+                known_kanji_txt,
+                scheduled_kanji_txt,
+                ],
+        outputs=[config_save_btn],
+    )
+
+    exercise_initiate_btn.click(
+        fn=run_the_exercise_initiate,
+        inputs=[
+            lessons_dropdown,
+            exercise_type_dropdown,
+            known_kanji_txt,
+            scheduled_kanji_txt,
+            exercise_input,
+            runtime_config
+        ],
+        outputs=[exercise_chat, exercise_input]
     )
 
     exercise_input.submit(
-        run_the_exercise_chat,
-        inputs=[exercise_input, exercise_chat, current_config],
+        fn=run_the_exercise_chat,
+        inputs=[
+            lessons_dropdown,
+            exercise_type_dropdown,
+            known_kanji_txt,
+            scheduled_kanji_txt,
+            exercise_input,
+            exercise_chat,
+            runtime_config
+        ],
         outputs=[exercise_chat, exercise_input]
     )
 
     conversation_input.submit(
         run_the_conversation_chat,
-        inputs=[conversation_input, conversation_chat, current_config],
+        inputs=[conversation_input, conversation_chat, runtime_config],
         outputs=[conversation_chat, conversation_input]
     )
 
     word_input.submit(
         run_the_word_chat,
-        inputs=[word_input, word_chat, current_config],
+        inputs=[word_input, word_chat, runtime_config],
         outputs=[word_chat, word_input]
     )
 
     aux_input.submit(
         run_the_aux_chat,
-        inputs=[aux_input, aux_chat, current_config],
+        inputs=[aux_input, aux_chat, runtime_config],
         outputs=[aux_chat, aux_input]
     )

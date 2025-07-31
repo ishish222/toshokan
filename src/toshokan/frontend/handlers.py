@@ -12,37 +12,114 @@ from toshokan.frontend.helpers import (
     convert_chat_messages_to_langchain_messages,
 )
 from toshokan.frontend.models import models
+import pandas as pd
+
+from toshokan.frontend.prompts.exercise import EXERCISE_SYSTEM_PROMPT
 
 
 _ = load_dotenv(find_dotenv())
 
 
-def run_the_exercise_chat(
-    user_input: str,
-    messages: list[AnyMessage],
-    config: dict,
+def update_lessons_included_choices_values(
+    lessons_df: pd.DataFrame,
+    lessons_df_selected_for_conversation: pd.DataFrame,
 ):
-    model = models[config['model_name']]
+    choices = lessons_df['Lesson'].tolist()
 
-    messages = list(convert_chat_messages_to_langchain_messages(messages))
+    # for values we need to check if the lesson is in the lessons_df_selected_for_conversation
+    values = [lesson for lesson in choices if lesson in lessons_df_selected_for_conversation['Lesson'].tolist()]
 
-    messages.append(HumanMessage(user_input))
-    input_messages = messages
+    return gr.Dropdown(choices=choices, value=values, multiselect=True)
 
-    assistant_message = model.invoke(input_messages)
-    messages.append(assistant_message)
 
+def update_exercise_lesson_dropdown_values(
+    lessons_df: pd.DataFrame,
+):
+    choices = lessons_df['Lesson'].tolist()
+    return gr.Dropdown(choices=choices, interactive=True)
+
+
+def update_exercise_type_dropdown_choices(
+    exercise_types_df: pd.DataFrame,
+):
+    choices = exercise_types_df['Exercise Type'].tolist()
+    return gr.Dropdown(choices=choices, interactive=True)
+
+
+def run_the_exercise_initiate(
+    lesson: str,
+    exercise_type: str,
+    known_kanji: str,
+    scheduled_kanji: str,
+    user_input: str,
+    runtime_config: dict,
+):
+
+    system_prompt = EXERCISE_SYSTEM_PROMPT.format(
+        lesson=lesson,
+        exercise_type=exercise_type,
+        known_kanji=known_kanji,
+        scheduled_kanji=scheduled_kanji
+    )
+
+    model = models[runtime_config['model_name']]
+
+    system_message = SystemMessage(content=system_prompt)
+    if len(user_input) > 0:
+        user_message = HumanMessage(user_input)
+        messages = [system_message, user_message]
+    else:
+        messages = [system_message]
+
+    assistant_message = model.invoke(messages)
+    messages = [assistant_message]
     converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
 
     return converted_messages, ''
 
 
+def run_the_exercise_chat(
+    lesson: str,
+    exercise_type: str,
+    known_kanji: str,
+    scheduled_kanji: str,
+    user_input: str,
+    messages: list[AnyMessage],
+    runtime_config: dict,
+):
+
+    if len(messages) == 0:
+        # we need to run the initiate exercise
+        return run_the_exercise_initiate(
+            lesson=lesson,
+            exercise_type=exercise_type,
+            known_kanji=known_kanji,
+            scheduled_kanji=scheduled_kanji,
+            user_input=user_input,
+            runtime_config=runtime_config)
+
+    else:
+        model = models[runtime_config['model_name']]
+
+        messages = list(convert_chat_messages_to_langchain_messages(messages))
+
+        messages.append(HumanMessage(user_input))
+        input_messages = messages
+
+        assistant_message = model.invoke(input_messages)
+        messages.append(assistant_message)
+
+        converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
+
+        return converted_messages, ''
+
+
 def run_the_conversation_chat(
     user_input: str,
     messages: list[AnyMessage],
-    config: dict,
+    runtime_config: dict,
 ):
-    model = models[config['model_name']]
+    model = models[runtime_config['model_name']]
 
     messages = list(convert_chat_messages_to_langchain_messages(messages))
 
@@ -60,9 +137,9 @@ def run_the_conversation_chat(
 def run_the_word_chat(
     user_input: str,
     messages: list[AnyMessage],
-    config: dict,
+    runtime_config: dict,
 ):
-    model = models[config['model_name']]
+    model = models[runtime_config['model_name']]
     messages = list(convert_chat_messages_to_langchain_messages(messages))
 
     messages.append(HumanMessage(user_input))
@@ -79,9 +156,9 @@ def run_the_word_chat(
 def run_the_aux_chat(
     user_input: str,
     messages: list[AnyMessage],
-    config: dict,
+    runtime_config: dict,
 ):
-    model = models[config['model_name']]
+    model = models[runtime_config['model_name']]
     messages = list(convert_chat_messages_to_langchain_messages(messages))
 
     messages.append(HumanMessage(user_input))
