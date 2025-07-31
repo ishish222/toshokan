@@ -11,10 +11,11 @@ from toshokan.frontend.handlers import (
     run_the_exercise_chat,
     update_lessons_included_choices,
     update_exercise_lesson_dropdown_values,
+    update_exercise_type_dropdown_choices,
 )
 from toshokan.frontend.models import models
 from toshokan.frontend.config import update_model_name
-from toshokan.frontend.state_manager import load_csv_into_df, load_csv_into_txt
+from toshokan.frontend.state_manager import load_csv_into_df_lessons, load_csv_into_df_exercise_types, load_csv_into_txt
 
 _ = load_dotenv(find_dotenv())
 
@@ -112,7 +113,7 @@ with gr.Blocks() as dashboard:
     )
 
     lessons_df_load_btn.upload(
-        fn=load_csv_into_df,
+        fn=load_csv_into_df_lessons,
         inputs=[lessons_df_load_btn],
         outputs=[lessons_df],
     ).then(
@@ -126,9 +127,13 @@ with gr.Blocks() as dashboard:
     )
 
     exercise_types_df_load_btn.upload(
-        fn=load_csv_into_df,
+        fn=load_csv_into_df_exercise_types,
         inputs=[exercise_types_df_load_btn],
         outputs=[exercise_types_df],
+    ).then(
+        fn=update_exercise_type_dropdown_choices,
+        inputs=[exercise_types_df],
+        outputs=[exercise_type_dropdown],
     )
 
     known_kanji_txt_load_btn.upload(

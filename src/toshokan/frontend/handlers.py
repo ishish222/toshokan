@@ -33,6 +33,13 @@ def update_exercise_lesson_dropdown_values(
     return gr.Dropdown(choices=choices, interactive=True)
 
 
+def update_exercise_type_dropdown_choices(
+    exercise_types_df: pd.DataFrame,
+):
+    choices = exercise_types_df['Exercise Type'].tolist()
+    return gr.Dropdown(choices=choices, interactive=True)
+
+
 def run_the_exercise_chat(
     user_input: str,
     messages: list[AnyMessage],
