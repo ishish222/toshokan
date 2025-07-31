@@ -12,6 +12,7 @@ from toshokan.frontend.handlers import (
     update_lessons_included_choices_values,
     update_exercise_lesson_dropdown_values,
     update_exercise_type_dropdown_choices,
+    run_the_exercise_initiate,
 )
 from toshokan.frontend.models import models
 from toshokan.frontend.config import update_model_name
@@ -47,7 +48,7 @@ with gr.Blocks() as dashboard:
     with gr.Row():
         with gr.Tab("Library"):
             with gr.Accordion("Configuration"):
-                current_config = gr.State({
+                runtime_config = gr.State({
                     'model_name': default_model_name,
                 })
                 model_name_dropdown = gr.Dropdown(
@@ -93,6 +94,8 @@ with gr.Blocks() as dashboard:
                 with gr.Row():
                     lessons_dropdown = gr.Dropdown(label="Lesson")
                     exercise_type_dropdown = gr.Dropdown(label="Exercise type")
+                with gr.Row():
+                    exercise_initiate_btn = gr.Button("Initiate exercise")
 
             with gr.Row():
                 exercise_chat = AgentChatbot()
@@ -105,6 +108,8 @@ with gr.Blocks() as dashboard:
                 #     lessons_included_in_conversation_drop_load_btn = gr.UploadButton("Load lessons included in conversation", file_types=[".csv"])
                 with gr.Row():
                     lessons_included_in_conversation_drop = gr.Dropdown(label="Lessons included in conversation", multiselect=True)
+                with gr.Row():
+                    conversation_initiate_btn = gr.Button("Initiate conversation")
 
             with gr.Tab("Conversation"):
                 with gr.Row():
@@ -126,11 +131,11 @@ with gr.Blocks() as dashboard:
 
     model_name_dropdown.select(
         fn=update_model_name,
-        inputs=[current_config, model_name_dropdown],
-        outputs=current_config,
+        inputs=[runtime_config, model_name_dropdown],
+        outputs=runtime_config,
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -154,7 +159,7 @@ with gr.Blocks() as dashboard:
         outputs=[lessons_dropdown],
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -174,7 +179,7 @@ with gr.Blocks() as dashboard:
         outputs=[lessons_dropdown],
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -194,7 +199,7 @@ with gr.Blocks() as dashboard:
         outputs=[lessons_included_in_conversation_drop],
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -210,7 +215,7 @@ with gr.Blocks() as dashboard:
         outputs=[lessons_included_in_conversation_drop],
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -230,7 +235,7 @@ with gr.Blocks() as dashboard:
         outputs=[exercise_type_dropdown],
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -246,7 +251,7 @@ with gr.Blocks() as dashboard:
         outputs=[exercise_type_dropdown],
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -262,7 +267,7 @@ with gr.Blocks() as dashboard:
         outputs=[known_kanji_txt],
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -278,7 +283,7 @@ with gr.Blocks() as dashboard:
         outputs=[scheduled_kanji_txt],
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -293,7 +298,7 @@ with gr.Blocks() as dashboard:
 
     config_save_btn.click(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -307,7 +312,7 @@ with gr.Blocks() as dashboard:
         fn=load_config,
         inputs=[config_load_btn],
         outputs=[
-            current_config,
+            runtime_config,
             lessons_df,
             lessons_df_selected_for_conversation,
             exercise_types_df,
@@ -316,7 +321,7 @@ with gr.Blocks() as dashboard:
         ],
     ).then(
         fn=save_config,
-        inputs=[current_config,
+        inputs=[runtime_config,
                 lessons_df,
                 lessons_df_selected_for_conversation,
                 exercise_types_df,
@@ -326,26 +331,47 @@ with gr.Blocks() as dashboard:
         outputs=[config_save_btn],
     )
 
+    exercise_initiate_btn.click(
+        fn=run_the_exercise_initiate,
+        inputs=[
+            lessons_dropdown,
+            exercise_type_dropdown,
+            known_kanji_txt,
+            scheduled_kanji_txt,
+            exercise_input,
+            runtime_config
+        ],
+        outputs=[exercise_chat, exercise_input]
+    )
+
     exercise_input.submit(
-        run_the_exercise_chat,
-        inputs=[exercise_input, exercise_chat, current_config],
+        fn=run_the_exercise_chat,
+        inputs=[
+            lessons_dropdown,
+            exercise_type_dropdown,
+            known_kanji_txt,
+            scheduled_kanji_txt,
+            exercise_input,
+            exercise_chat,
+            runtime_config
+        ],
         outputs=[exercise_chat, exercise_input]
     )
 
     conversation_input.submit(
         run_the_conversation_chat,
-        inputs=[conversation_input, conversation_chat, current_config],
+        inputs=[conversation_input, conversation_chat, runtime_config],
         outputs=[conversation_chat, conversation_input]
     )
 
     word_input.submit(
         run_the_word_chat,
-        inputs=[word_input, word_chat, current_config],
+        inputs=[word_input, word_chat, runtime_config],
         outputs=[word_chat, word_input]
     )
 
     aux_input.submit(
         run_the_aux_chat,
-        inputs=[aux_input, aux_chat, current_config],
+        inputs=[aux_input, aux_chat, runtime_config],
         outputs=[aux_chat, aux_input]
     )
