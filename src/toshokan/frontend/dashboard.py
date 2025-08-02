@@ -124,7 +124,7 @@ with gr.Blocks() as dashboard:
                 with gr.Row():
                     conversation_initiate_btn = gr.Button("Initiate conversation")
                 with gr.Row():
-                    conversation_situation = gr.Textbox(label="Situation", interactive=False)
+                    conversation_situation = gr.Textbox(label="Situation", interactive=True, lines=3)
 
             with gr.Tab("Conversation"):
                 with gr.Row():
