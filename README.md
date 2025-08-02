@@ -16,6 +16,62 @@ In Toshokan I attempted to harness capabilities of contemporary LLMs to remove t
 
 ## Installing & running
 
+### Prerequisites
+
+As prerequisites, you'll need to set up some env variables. 
+
+Basic configuration includes setting the host and port variables:
+
+```sh
+export APP_HOST=0.0.0.0
+export APP_PORT=8080
+```
+
+Or you can simply use the provided sample file:
+
+```sh
+cp env.sample.cfg .env
+```
+
+#### Model keys
+
+Depending on the model broker that you use, you'll need to set API keys, like:
+```sh
+OPENROUTER_API_KEY=<key>  # If you use openrouter/* models
+OPENAI_API_KEY=<key>  # If you use openai/* models
+```
+etc.
+
+#### Local certificate path 
+
+Optionally, you can use certificates. If you do, put your `server.key` and `server.crt` into a dir and pass the `LOCAL_CERT_PATH` env
+
+#### AWS Cognito integration
+
+Optionally, you can integrate the app with AWS cognito for multitenancy. You need to set the following env vars:
+
+```sh
+COGNITO_INTEGRATE=true
+COGNITO_DOMAIN=<domain>
+COGNITO_DOMAIN_CLIENT_ID=<client id>
+COGNITO_DOMAIN_REDIRECT_URI_LOGIN=<redirect client login>
+COGNITO_DOMAIN_REDIRECT_URI_LOGOUT=<redirect client logout>
+COGNITO_DOMAIN_USER_POOL_ID=<user pool id>
+COGNITO_DOMAIN_REGION=<cognito region>
+```
+
+#### Optional LangSmith tracing
+
+You can enable Langsmith tracing for registering runs. To do se set LS-related env variables:
+
+```sh
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_API_KEY=<your LS API key>
+```
+
+### Building and running directly from code
+
 Clone the repo:
 
 ```sh
@@ -23,7 +79,7 @@ $ git clone https://github.com/ishish222/toshokan
 $ cd toshokan
 ```
 
-Set the API keys of your favourite model broker in env
+Set the env variables
 
 ```sh
 $ export OPENROUTER_API_KEY=...
@@ -36,6 +92,33 @@ $ poetry install
 $ poetry run python -m toshokan.frontend.app
 ```
 
-Go to 127.0.0.1:8080
+Navigate to: http://<APP_HOST>:<APP_PORT>
 
-[dockerfile pending]
+### Building and running from the dockerfile
+
+Build the image with:
+
+```sh
+$ docker build -f dockerfiles/Dockerfile.dashboard.single -t toshokan-dashboard .
+```
+
+Run:
+
+```sh
+$ docker run -p 80:8080 --env-file .env toshokan-dashboard 
+```
+
+## Usage
+
+### Configuration save / load
+
+[...]
+
+
+### Exercises
+
+[...]
+
+### Conversations
+
+[...]

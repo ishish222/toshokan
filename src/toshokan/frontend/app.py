@@ -163,16 +163,6 @@ def go_to_dashboard():
     return RedirectResponse("/dashboard")
 
 
-@app.get("/dashboard/favicon.ico", include_in_schema=False)
-async def dashboard_favicon():
-    return FileResponse("static/favicon.ico")
-
-
-@app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
-    return FileResponse("static/favicon.ico")
-
-
 if __name__ == '__main__':
     if COGNITO_INTEGRATE:
         app.add_middleware(AuthMiddleware)
