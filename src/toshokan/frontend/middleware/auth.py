@@ -1,5 +1,5 @@
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from gradio.context import LocalContext
@@ -9,14 +9,22 @@ import httpx
 from datetime import datetime, timezone
 
 
-ENVIRONMENT = os.environ['ENVIRONMENT']
-APP_HOST = os.environ['APP_HOST']
-APP_PORT = os.environ['APP_PORT']
-COGNITO_DOMAIN = os.environ['COGNITO_DOMAIN']
-CLIENT_ID = os.environ['COGNITO_DOMAIN_CLIENT_ID']
-COGNITO_DOMAIN_REGION = os.environ['COGNITO_DOMAIN_REGION']
-COGNITO_POOL_ID = os.environ['COGNITO_DOMAIN_USER_POOL_ID']
-JWKS_URL = f"https://cognito-idp.{COGNITO_DOMAIN_REGION}.amazonaws.com/{COGNITO_POOL_ID}/.well-known/jwks.json"
+COGNITO_INTEGRATE = os.environ.get('COGNITO_INTEGRATE', 'false').lower() == 'true'
+
+if COGNITO_INTEGRATE:
+    ENVIRONMENT = os.environ['ENVIRONMENT']
+    APP_HOST = os.environ['APP_HOST']
+    APP_PORT = os.environ['APP_PORT']
+    COGNITO_DOMAIN = os.environ['COGNITO_DOMAIN']
+    CLIENT_ID = os.environ['COGNITO_DOMAIN_CLIENT_ID']
+    COGNITO_DOMAIN_REGION = os.environ['COGNITO_DOMAIN_REGION']
+    COGNITO_POOL_ID = os.environ['COGNITO_DOMAIN_USER_POOL_ID']
+    JWKS_URL = f"https://cognito-idp.{COGNITO_DOMAIN_REGION}.amazonaws.com/{COGNITO_POOL_ID}/.well-known/jwks.json"
+else:
+    # Define dummy variables for when Cognito is not integrated
+    ENVIRONMENT, APP_HOST, APP_PORT, COGNITO_DOMAIN, CLIENT_ID, COGNITO_DOMAIN_REGION, COGNITO_POOL_ID, JWKS_URL = (
+        "", "", "", "", "", "", "", ""
+    )
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(authorizationUrl=f"{COGNITO_DOMAIN}/login", tokenUrl=f"{COGNITO_DOMAIN}/oauth2/token")
 
@@ -56,6 +64,11 @@ async def get_current_user(
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
+
+        if not COGNITO_INTEGRATE:
+            LocalContext.session_info = {"cognito_id": "dev_user", "email": "dev_user@example.com"}
+            return await call_next(request)
+
         # List of routes that don't require authentication
         open_routes = [
             "/login",

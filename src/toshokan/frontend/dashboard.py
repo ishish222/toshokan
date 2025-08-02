@@ -28,12 +28,16 @@ from toshokan.frontend.state_manager import (
 
 _ = load_dotenv(find_dotenv())
 
+COGNITO_INTEGRATE = os.environ.get('COGNITO_INTEGRATE', 'false').lower() == 'true'
+
+if COGNITO_INTEGRATE:
+    COGNITO_DOMAIN = os.environ['COGNITO_DOMAIN']
+    CLIENT_ID = os.environ['COGNITO_DOMAIN_CLIENT_ID']
+    REDIRECT_URI_LOGIN = os.environ['COGNITO_DOMAIN_REDIRECT_URI_LOGIN']
+    REDIRECT_URI_LOGOUT = os.environ['COGNITO_DOMAIN_REDIRECT_URI_LOGOUT']
+
 APP_HOST = os.environ['APP_HOST']
 APP_PORT = os.environ['APP_PORT']
-COGNITO_DOMAIN = os.environ['COGNITO_DOMAIN']
-CLIENT_ID = os.environ['COGNITO_DOMAIN_CLIENT_ID']
-REDIRECT_URI_LOGIN = os.environ['COGNITO_DOMAIN_REDIRECT_URI_LOGIN']
-REDIRECT_URI_LOGOUT = os.environ['COGNITO_DOMAIN_REDIRECT_URI_LOGOUT']
 CODE_VERSION = os.environ['CODE_VERSION']
 
 # Default model
@@ -41,10 +45,14 @@ default_model_name = 'openai/gpt-4o'
 
 with gr.Blocks() as dashboard:
     with gr.Row():
-        with gr.Column():
-            account_label = gr.Label("account", label="Account")
-        with gr.Column():
-            logout_btn = gr.Button("Logout", link="/logout")
+        gr.Label("Toshokan (図書館)", show_label=False)
+
+    if COGNITO_INTEGRATE:
+        with gr.Row():
+            with gr.Column():
+                account_label = gr.Label("account", label="Account")
+            with gr.Column():
+                logout_btn = gr.Button("Logout", link="/logout")
 
     with gr.Row():
         with gr.Tab("Library"):
@@ -121,11 +129,11 @@ with gr.Blocks() as dashboard:
             with gr.Tab("Conversation"):
                 with gr.Row():
                     conversation_chat = AgentChatbot()
-                with gr.Accordion():
+                with gr.Accordion("Notes / kanji", open=False):
                     with gr.Row():
                         conversation_unknown_kanji = gr.Dataframe(label="Unknown kanji", interactive=False)
-                with gr.Row():
-                    conversation_notes = gr.Textbox(label="Notes", interactive=False)
+                    with gr.Row():
+                        conversation_notes = gr.Textbox(label="Notes", interactive=False)
                 with gr.Row():
                     conversation_input = gr.Textbox(label="Input", lines=3, interactive=True)
 

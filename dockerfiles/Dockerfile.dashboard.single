@@ -1,0 +1,37 @@
+# Stage 1: Build
+FROM python:3.12-slim AS builder
+LABEL authors="ts@ishish.io"
+
+# Install build dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install poetry
+RUN pip install poetry
+
+# Copy the the application before poetry manipulations (we'd overwrite pyproject and lockfile if we did it later)
+COPY . /app
+
+# Install project dependencies
+WORKDIR /app
+RUN poetry install
+
+# set the code version variable
+ARG COMMIT_SHA
+ENV CODE_VERSION=$COMMIT_SHA
+RUN echo "COMMIT_SHA is: $COMMIT_SHA"
+
+WORKDIR /app/src/loregen/frontend
+EXPOSE 80
+
+# Default script to run, to be overwritten in terraform
+# ENV SCRIPT_NAME=app.py 
+ENV MODULE=toshokan.frontend.app
+ENV PYTHONPATH=/app/src
+
+COPY dockerfiles/start.sh /app/dockerfiles/start.sh
+RUN chmod +x /app/dockerfiles/start.sh
+
+ENTRYPOINT ["/app/dockerfiles/start.sh"]
