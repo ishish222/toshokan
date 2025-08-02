@@ -2,6 +2,11 @@
 
 > Practice Japanese with context-aware lessons and guided conversations, powered by LLMs.
 
+[![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
+[![LLM-powered](https://img.shields.io/badge/LLM-Powered-brightgreen.svg)](#)
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://hub.docker.com/)
+[![Made with LangChain](https://img.shields.io/badge/Made%20with-LangChain-orange)](https://www.langchain.com/)
+
 The goal of the Toshokan project is to aid English-speaking students in learning Japanese language. In my experience on the path to learn Japanese I realised that there are many obstacles that I haven't come across learning e.g., English or Portuguese. For example:
 
 - Formality levels - Japanese language has Confucianist sense of hierarchy built-in. The conjugation changes depending on age or position in hierarchy (in other languages I know it's just phrases that change or 2nd vs. 3rd person)
