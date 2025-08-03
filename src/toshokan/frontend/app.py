@@ -169,14 +169,21 @@ if __name__ == '__main__':
     gr.mount_gradio_app(app, dashboard, path='/dashboard', favicon_path='/dashboard/favicon.ico', allowed_paths=['/dashboard/output'])
 
     if ENVIRONMENT == 'local':
-        LOCAL_CERT_PATH = os.environ['LOCAL_CERT_PATH']
-        uvicorn.run(
-            app,
-            host=APP_HOST,
-            port=int(APP_PORT),
-            ssl_keyfile=f'{LOCAL_CERT_PATH}/server.key',
-            ssl_certfile=f'{LOCAL_CERT_PATH}/server.crt',
-            )
+        if 'LOCAL_CERT_PATH' in os.environ:
+            LOCAL_CERT_PATH = os.environ['LOCAL_CERT_PATH']
+            uvicorn.run(
+                app,
+                host=APP_HOST,
+                port=int(APP_PORT),
+                ssl_keyfile=f'{LOCAL_CERT_PATH}/server.key',
+                ssl_certfile=f'{LOCAL_CERT_PATH}/server.crt',
+                )
+        else:
+            uvicorn.run(
+                app,
+                host=APP_HOST,
+                port=int(APP_PORT),
+                )
     else:
         uvicorn.run(
             app,
