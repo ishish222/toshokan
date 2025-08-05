@@ -125,8 +125,6 @@ with gr.Blocks() as dashboard:
                     conversation_initiate_btn = gr.Button("Initiate conversation")
                 with gr.Row():
                     conversation_situation = gr.Textbox(label="Situation", interactive=True, lines=3)
-
-            with gr.Tab("Conversation"):
                 with gr.Row():
                     conversation_chat = AgentChatbot()
                 with gr.Accordion("Notes / kanji", open=False):
@@ -137,17 +135,18 @@ with gr.Blocks() as dashboard:
                 with gr.Row():
                     conversation_input = gr.Textbox(label="Input", lines=3, interactive=True)
 
-            with gr.Tab("Japanese word"):
-                with gr.Row():
-                    word_chat = AgentChatbot()
-                with gr.Row():
-                    word_input = gr.Textbox(label="Input")
+        with gr.Tab("Japanese word"):
+            with gr.Row():
+                word_chat = AgentChatbot()
+            with gr.Row():
+                word_input = gr.Textbox(label="Input")
 
-            with gr.Tab("General aux chat"):
-                with gr.Row():
-                    aux_chat = AgentChatbot()
-                with gr.Row():
-                    aux_input = gr.Textbox(label="Input")
+        with gr.Tab("General aux chat"):
+            with gr.Row():
+                aux_chat = AgentChatbot()
+            with gr.Row():
+                aux_input = gr.Textbox(label="Input")
+
 
     model_name_dropdown.select(
         fn=update_model_name,
