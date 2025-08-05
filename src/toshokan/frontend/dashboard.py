@@ -9,6 +9,7 @@ from toshokan.frontend.handlers import (
     run_the_conversation_chat,
     run_the_word_chat,
     run_the_exercise_chat,
+    run_the_breakdown_chat,
     update_lessons_included_choices_values,
     update_exercise_lesson_dropdown_values,
     update_exercise_type_dropdown_choices,
@@ -135,18 +136,23 @@ with gr.Blocks() as dashboard:
                 with gr.Row():
                     conversation_input = gr.Textbox(label="Input", lines=3, interactive=True)
 
-        with gr.Tab("Japanese word"):
+        with gr.Tab("Word lookup"):
             with gr.Row():
                 word_chat = AgentChatbot()
             with gr.Row():
                 word_input = gr.Textbox(label="Input")
+
+        with gr.Tab("Sentence breakdown"):
+            with gr.Row():
+                breakdown_chat = AgentChatbot()
+            with gr.Row():
+                breakdown_input = gr.Textbox(label="Input")
 
         with gr.Tab("General aux chat"):
             with gr.Row():
                 aux_chat = AgentChatbot()
             with gr.Row():
                 aux_input = gr.Textbox(label="Input")
-
 
     model_name_dropdown.select(
         fn=update_model_name,
@@ -395,6 +401,12 @@ with gr.Blocks() as dashboard:
         run_the_word_chat,
         inputs=[word_input, word_chat, runtime_config],
         outputs=[word_chat, word_input]
+    )
+
+    breakdown_input.submit(
+        run_the_breakdown_chat,
+        inputs=[breakdown_input, breakdown_chat, runtime_config],
+        outputs=[breakdown_chat, breakdown_input]
     )
 
     aux_input.submit(

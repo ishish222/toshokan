@@ -14,6 +14,7 @@ from toshokan.frontend.helpers import (
 from toshokan.frontend.models import models
 import pandas as pd
 
+from toshokan.frontend.prompts.breakdown import BREAKDOWN_SYSTEM_PROMPT
 from toshokan.frontend.prompts.exercise import EXERCISE_SYSTEM_PROMPT
 from toshokan.frontend.prompts.conversation import (
     CONVERSATION_SYSTEM_PROMPT,
@@ -137,6 +138,28 @@ def run_the_word_chat(
 ):
     system_prompt = WORD_SYSTEM_PROMPT.format(
         word=user_input
+    )
+    system_message = SystemMessage(content=system_prompt)
+
+    model = models[runtime_config['model_name']]
+
+    messages = [system_message] + list(convert_chat_messages_to_langchain_messages(messages)) + [HumanMessage(user_input)]
+
+    assistant_message = model.invoke(messages)
+    messages.append(assistant_message)
+
+    converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
+
+    return converted_messages, ''
+
+
+def run_the_breakdown_chat(
+    user_input: str,
+    messages: list[AnyMessage],
+    runtime_config: dict,
+):
+    system_prompt = BREAKDOWN_SYSTEM_PROMPT.format(
+        sentence=user_input
     )
     system_message = SystemMessage(content=system_prompt)
 
