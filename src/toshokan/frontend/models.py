@@ -8,13 +8,32 @@ def ensure_openrouter_api_key(
     return os.environ.get('OPENROUTER_API_KEY') is not None
 
 
+def get_available_model_names():
+    """Return just the model names for dropdown without initializing models"""
+    return [
+        'anthropic/claude-3.5-sonnet',
+        'anthropic/claude-3-opus', 
+        'ai21/jamba-1-5-large',
+        'google/gemini-pro-1.5',
+        'openai/gpt-4o-2024-11-20',
+        'openai/gpt-4o',
+        'openai/gpt-4o (0.7)',
+        'openai/gpt-4o-mini-2024-07-18',
+        'openai/o3-mini',
+        'meta-llama/llama-3.1-70b-instruct',
+        'meta-llama/llama-3.1-405b-instruct',
+        'deepseek/deepseek-chat',
+        'mistralai/mixtral-8x22b-instruct',
+        'mistralai/mistral-large',
+        'qwen/qwen-turbo'
+    ]
+
+
 def reload_models():
     models = {}
 
-    if 'OPENROUTER_API_KEY' not in os.environ:
-        api_key = None
-    else:
-        api_key = os.environ['OPENROUTER_API_KEY']
+    # Always use the current environment variable value
+    api_key = os.environ.get('OPENROUTER_API_KEY')
 
     models['anthropic/claude-3.5-sonnet'] = ChatOpenRouter(
         model_name='anthropic/claude-3.5-sonnet',

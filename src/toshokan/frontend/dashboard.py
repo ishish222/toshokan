@@ -16,7 +16,7 @@ from toshokan.frontend.handlers import (
     run_the_exercise_initiate,
     run_the_conversation_initiate,
 )
-from toshokan.frontend.models import reload_models
+from toshokan.frontend.models import reload_models, get_available_model_names
 from toshokan.frontend.config import update_model_name, update_openrouter_api_key
 from toshokan.frontend.state_manager import (
     load_csv_into_df_lessons,
@@ -78,7 +78,7 @@ with gr.Blocks() as dashboard:
                     'openrouter_api_key': None,
                 })
                 model_name_dropdown = gr.Dropdown(
-                    choices=list(reload_models().keys()),
+                    choices=get_available_model_names(),
                     value=default_model_name,
                     label="Model",
                     info="Select the model to use for the conversation",
