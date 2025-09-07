@@ -179,10 +179,10 @@ with gr.Blocks() as dashboard:
         outputs=[config_save_btn],
     )
 
-    openrouter_api_key.change(
+    api_key_save_btn.click(
         fn=update_openrouter_api_key,
         inputs=[runtime_config, openrouter_api_key],
-        outputs=runtime_config,
+        outputs=[runtime_config, openrouter_api_key],
     )
 
     lessons_df_load_btn.upload(

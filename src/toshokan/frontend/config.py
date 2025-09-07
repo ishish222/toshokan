@@ -12,7 +12,7 @@ def update_model_name(
 def update_openrouter_api_key(
         config: dict,
         openrouter_api_key: str,
-) -> dict:
+) -> tuple[dict, str]:
     config['openrouter_api_key'] = openrouter_api_key
     os.environ['OPENROUTER_API_KEY'] = openrouter_api_key
-    return config
+    return config, ''
