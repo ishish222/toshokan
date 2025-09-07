@@ -12,5 +12,5 @@ class ChatOpenRouter(ChatOpenAI):
                  **kwargs):
         # openai_api_key = openai_api_key or SecretStr(os.getenv('OPENROUTER_API_KEY'))
         super().__init__(openai_api_base=openai_api_base,
-                         openai_api_key=openai_api_key,
+                         api_key=openai_api_key,
                          model_name=model_name, **kwargs)
