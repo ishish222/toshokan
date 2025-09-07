@@ -61,7 +61,7 @@ with gr.Blocks() as dashboard:
             with gr.Accordion("API key"):
                 with gr.Row():
                     with gr.Column(scale=9):
-                        openrouter_api_key = gr.Textbox(label="Openrouter API key")
+                        openrouter_api_key = gr.Textbox(label="Openrouter API key (you can get it from https://openrouter.ai/settings/keys)")
                     with gr.Column(scale=1):
                         api_key_save_btn = gr.Button("Save API key")
 
