@@ -9,14 +9,15 @@ from toshokan.frontend.handlers import (
     run_the_conversation_chat,
     run_the_word_chat,
     run_the_exercise_chat,
+    run_the_breakdown_chat,
     update_lessons_included_choices_values,
     update_exercise_lesson_dropdown_values,
     update_exercise_type_dropdown_choices,
     run_the_exercise_initiate,
     run_the_conversation_initiate,
 )
-from toshokan.frontend.models import models
-from toshokan.frontend.config import update_model_name
+from toshokan.frontend.models import reload_models
+from toshokan.frontend.config import update_model_name, update_openrouter_api_key
 from toshokan.frontend.state_manager import (
     load_csv_into_df_lessons,
     load_csv_into_df_exercise_types,
@@ -57,18 +58,27 @@ with gr.Blocks() as dashboard:
     with gr.Row():
         with gr.Tab("Library"):
 
+            with gr.Accordion("API key"):
+                with gr.Row():
+                    with gr.Column(scale=9):
+                        openrouter_api_key = gr.Textbox(label="Openrouter API key")
+                    with gr.Column(scale=1):
+                        api_key_save_btn = gr.Button("Save API key")
+
             with gr.Accordion("Configuration save/load"):
                 with gr.Row():
-                    config_load_btn = gr.UploadButton("Load configuration", file_types=[".json"])
-                with gr.Row():
-                    config_save_btn = gr.DownloadButton("Save configuration")
+                    with gr.Column():
+                        config_load_btn = gr.UploadButton("Load configuration", file_types=[".json"])
+                    with gr.Column():
+                        config_save_btn = gr.DownloadButton("Save configuration")
 
             with gr.Accordion("Configuration"):
                 runtime_config = gr.State({
                     'model_name': default_model_name,
+                    'openrouter_api_key': None,
                 })
                 model_name_dropdown = gr.Dropdown(
-                    choices=list(models.keys()),
+                    choices=list(reload_models().keys()),
                     value=default_model_name,
                     label="Model",
                     info="Select the model to use for the conversation",
@@ -125,8 +135,6 @@ with gr.Blocks() as dashboard:
                     conversation_initiate_btn = gr.Button("Initiate conversation")
                 with gr.Row():
                     conversation_situation = gr.Textbox(label="Situation", interactive=True, lines=3)
-
-            with gr.Tab("Conversation"):
                 with gr.Row():
                     conversation_chat = AgentChatbot()
                 with gr.Accordion("Notes / kanji", open=False):
@@ -137,17 +145,23 @@ with gr.Blocks() as dashboard:
                 with gr.Row():
                     conversation_input = gr.Textbox(label="Input", lines=3, interactive=True)
 
-            with gr.Tab("Japanese word"):
-                with gr.Row():
-                    word_chat = AgentChatbot()
-                with gr.Row():
-                    word_input = gr.Textbox(label="Input")
+        with gr.Tab("Word lookup"):
+            with gr.Row():
+                word_chat = AgentChatbot()
+            with gr.Row():
+                word_input = gr.Textbox(label="Input")
 
-            with gr.Tab("General aux chat"):
-                with gr.Row():
-                    aux_chat = AgentChatbot()
-                with gr.Row():
-                    aux_input = gr.Textbox(label="Input")
+        with gr.Tab("Sentence breakdown"):
+            with gr.Row():
+                breakdown_chat = AgentChatbot()
+            with gr.Row():
+                breakdown_input = gr.Textbox(label="Input")
+
+        with gr.Tab("General aux chat"):
+            with gr.Row():
+                aux_chat = AgentChatbot()
+            with gr.Row():
+                aux_input = gr.Textbox(label="Input")
 
     model_name_dropdown.select(
         fn=update_model_name,
@@ -163,6 +177,12 @@ with gr.Blocks() as dashboard:
                 scheduled_kanji_txt,
                 ],
         outputs=[config_save_btn],
+    )
+
+    openrouter_api_key.change(
+        fn=update_openrouter_api_key,
+        inputs=[runtime_config, openrouter_api_key],
+        outputs=runtime_config,
     )
 
     lessons_df_load_btn.upload(
@@ -396,6 +416,12 @@ with gr.Blocks() as dashboard:
         run_the_word_chat,
         inputs=[word_input, word_chat, runtime_config],
         outputs=[word_chat, word_input]
+    )
+
+    breakdown_input.submit(
+        run_the_breakdown_chat,
+        inputs=[breakdown_input, breakdown_chat, runtime_config],
+        outputs=[breakdown_chat, breakdown_input]
     )
 
     aux_input.submit(

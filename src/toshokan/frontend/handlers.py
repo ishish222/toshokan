@@ -11,9 +11,10 @@ from toshokan.frontend.helpers import (
     convert_langchain_messages_to_chat_messages,
     convert_chat_messages_to_langchain_messages,
 )
-from toshokan.frontend.models import models
+from toshokan.frontend.models import reload_models, ensure_openrouter_api_key
 import pandas as pd
 
+from toshokan.frontend.prompts.breakdown import BREAKDOWN_SYSTEM_PROMPT
 from toshokan.frontend.prompts.exercise import EXERCISE_SYSTEM_PROMPT
 from toshokan.frontend.prompts.conversation import (
     CONVERSATION_SYSTEM_PROMPT,
@@ -71,14 +72,17 @@ def run_the_exercise_initiate(
     runtime_config: dict,
 ):
 
+    model = reload_models()[runtime_config['model_name']]
+
+    if not ensure_openrouter_api_key(model):
+        raise gr.Error('Openrouter API key is not set')
+
     system_prompt = EXERCISE_SYSTEM_PROMPT.format(
         lesson=lesson,
         exercise_type=exercise_type,
         known_kanji=known_kanji,
         scheduled_kanji=scheduled_kanji
     )
-
-    model = models[runtime_config['model_name']]
 
     system_message = SystemMessage(content=system_prompt)
     if len(user_input) > 0:
@@ -115,7 +119,10 @@ def run_the_exercise_chat(
             runtime_config=runtime_config)
 
     else:
-        model = models[runtime_config['model_name']]
+        model = reload_models()[runtime_config['model_name']]
+
+        if not ensure_openrouter_api_key(model):
+            raise gr.Error('Openrouter API key is not set')
 
         messages = list(convert_chat_messages_to_langchain_messages(messages))
 
@@ -135,12 +142,40 @@ def run_the_word_chat(
     messages: list[AnyMessage],
     runtime_config: dict,
 ):
+    model = reload_models()[runtime_config['model_name']]
+
+    if not ensure_openrouter_api_key(model):
+        raise gr.Error('Openrouter API key is not set')
+
     system_prompt = WORD_SYSTEM_PROMPT.format(
         word=user_input
     )
     system_message = SystemMessage(content=system_prompt)
 
-    model = models[runtime_config['model_name']]
+    messages = [system_message] + list(convert_chat_messages_to_langchain_messages(messages)) + [HumanMessage(user_input)]
+
+    assistant_message = model.invoke(messages)
+    messages.append(assistant_message)
+
+    converted_messages = list(convert_langchain_messages_to_chat_messages(messages))
+
+    return converted_messages, ''
+
+
+def run_the_breakdown_chat(
+    user_input: str,
+    messages: list[AnyMessage],
+    runtime_config: dict,
+):
+    model = reload_models()[runtime_config['model_name']]
+
+    if not ensure_openrouter_api_key(model):
+        raise gr.Error('Openrouter API key is not set')
+
+    system_prompt = BREAKDOWN_SYSTEM_PROMPT.format(
+        sentence=user_input
+    )
+    system_message = SystemMessage(content=system_prompt)
 
     messages = [system_message] + list(convert_chat_messages_to_langchain_messages(messages)) + [HumanMessage(user_input)]
 
@@ -157,12 +192,15 @@ def run_the_aux_chat(
     messages: list[AnyMessage],
     runtime_config: dict,
 ):
+    model = reload_models()[runtime_config['model_name']]
+
+    if not ensure_openrouter_api_key(model):
+        raise gr.Error('Openrouter API key is not set')
+
     system_prompt = AUX_SYSTEM_PROMPT.format(
         user_input=user_input
     )
     system_message = SystemMessage(content=system_prompt)
-
-    model = models[runtime_config['model_name']]
 
     messages = [system_message] + list(convert_chat_messages_to_langchain_messages(messages)) + [HumanMessage(user_input)]
 
@@ -178,11 +216,16 @@ def detect_all_kanji(
     sentence: str,
     runtime_config: dict,
 ):
+    model = reload_models()[runtime_config['model_name']]
+
+    if not ensure_openrouter_api_key(model):
+        raise gr.Error('Openrouter API key is not set')
+
     system_prompt = CONVERSATION_SYSTEM_ALL_KANJI_PROMPT.format(
         sentence=sentence
     )
 
-    model = models[runtime_config['model_name']].with_structured_output(AllKanji)
+    model = model.with_structured_output(AllKanji)
     system_message = SystemMessage(content=system_prompt)
     messages = [system_message]
 
@@ -197,6 +240,11 @@ def detect_unknown_kanji(
     scheduled_kanji: str,
     runtime_config: dict,
 ):
+    model = reload_models()[runtime_config['model_name']]
+
+    if not ensure_openrouter_api_key(model):
+        raise gr.Error('Openrouter API key is not set')
+
     unknown_kanji = []
 
     all_kanji = detect_all_kanji(
@@ -214,7 +262,7 @@ def detect_unknown_kanji(
     system_prompt = CONVERSATION_SYSTEM_UNKNOWN_KANJI_PROMPT.format(
         kanji=unknown_kanji
     )
-    model = models[runtime_config['model_name']].with_structured_output(ConversationKanjiResponse)
+    model = model.with_structured_output(ConversationKanjiResponse)
     system_message = SystemMessage(content=system_prompt)
     messages = [system_message]
 
@@ -239,6 +287,11 @@ def run_the_conversation_initiate(
     formality: str,
     runtime_config: dict,
 ):
+    model = reload_models()[runtime_config['model_name']]
+
+    if not ensure_openrouter_api_key(model):
+        raise gr.Error('Openrouter API key is not set')
+
     system_prompt = CONVERSATION_SYSTEM_INITIALIZE_PROMPT.format(
         formality=formality
     )
@@ -246,7 +299,7 @@ def run_the_conversation_initiate(
     system_message = SystemMessage(content=system_prompt)
     messages = [system_message]
 
-    model = models[runtime_config['model_name']].with_structured_output(ConversationSituation)
+    model = model.with_structured_output(ConversationSituation)
 
     seed = random.randint(0, 2**31-1)
     # import pdb; pdb.set_trace()
@@ -266,7 +319,10 @@ def run_the_conversation_chat(
     formality: str,
     runtime_config: dict,
 ):
-    # import pdb; pdb.set_trace()
+    model = reload_models()[runtime_config['model_name']]
+
+    if not ensure_openrouter_api_key(model):
+        raise gr.Error('Openrouter API key is not set')
 
     system_prompt = CONVERSATION_SYSTEM_PROMPT.format(
         lessons=lessons,
@@ -276,7 +332,7 @@ def run_the_conversation_chat(
         formality=formality
     )
 
-    model = models[runtime_config['model_name']].with_structured_output(ConversationResponse)
+    model = model.with_structured_output(ConversationResponse)
 
     system_message = SystemMessage(content=system_prompt)
 
