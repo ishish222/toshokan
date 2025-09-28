@@ -25,6 +25,10 @@ from toshokan.frontend.state_manager import (
     load_csv_into_txt,
     save_config,
     load_config,
+    save_exercise_progress,
+    load_exercise_progress,
+    exercise_chat_to_state,
+    exercise_state_to_chat,
 )
 
 _ = load_dotenv(find_dotenv())
@@ -110,12 +114,15 @@ with gr.Blocks() as dashboard:
                     scheduled_kanji_txt = gr.Textbox(label="Scheduled kanji")
 
         with gr.Tab("Exercises"):
+            exercise_state = gr.State({})
             with gr.Accordion("Select lesson and exercise type"):
                 with gr.Row():
                     lessons_dropdown = gr.Dropdown(label="Lesson", multiselect=True)
                     exercise_type_dropdown = gr.Dropdown(label="Exercise type")
                 with gr.Row():
                     exercise_initiate_btn = gr.Button("Initiate exercise")
+                    exercise_save_btn = gr.DownloadButton("Save progress")
+                    exercise_load_btn = gr.UploadButton("Load progress")
 
             with gr.Row():
                 exercise_chat = AgentChatbot()
@@ -359,6 +366,18 @@ with gr.Blocks() as dashboard:
         outputs=[config_save_btn],
     )
 
+    lessons_dropdown.change(
+        fn=exercise_state_to_chat,
+        inputs=[lessons_dropdown, exercise_type_dropdown, exercise_state],
+        outputs=[exercise_chat]
+    )
+
+    exercise_type_dropdown.change(
+        fn=exercise_state_to_chat,
+        inputs=[lessons_dropdown, exercise_type_dropdown, exercise_state],
+        outputs=[exercise_chat]
+    )
+
     exercise_initiate_btn.click(
         fn=run_the_exercise_initiate,
         inputs=[
@@ -384,6 +403,26 @@ with gr.Blocks() as dashboard:
             runtime_config
         ],
         outputs=[exercise_chat, exercise_input]
+    ).then(
+        fn=exercise_chat_to_state,
+        inputs=[lessons_dropdown, exercise_type_dropdown, exercise_chat, exercise_state],
+        outputs=[exercise_state]
+    )
+
+    exercise_save_btn.click(
+        fn=save_exercise_progress,
+        inputs=[exercise_state],
+        outputs=[exercise_save_btn]
+    )
+
+    exercise_load_btn.upload(
+        fn=load_exercise_progress,
+        inputs=[exercise_load_btn],
+        outputs=[exercise_state]
+    ).then(
+        fn=exercise_state_to_chat,
+        inputs=[lessons_dropdown, exercise_type_dropdown, exercise_state],
+        outputs=[exercise_chat]
     )
 
     conversation_initiate_btn.click(
