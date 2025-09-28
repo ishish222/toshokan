@@ -64,7 +64,7 @@ def update_exercise_type_dropdown_choices(
 
 
 def run_the_exercise_initiate(
-    lesson: str,
+    lessons_included: list[str],
     exercise_type: str,
     known_kanji: str,
     scheduled_kanji: str,
@@ -78,7 +78,7 @@ def run_the_exercise_initiate(
         raise gr.Error('Openrouter API key is not set')
 
     system_prompt = EXERCISE_SYSTEM_PROMPT.format(
-        lesson=lesson,
+        lessons_included=lessons_included,
         exercise_type=exercise_type,
         known_kanji=known_kanji,
         scheduled_kanji=scheduled_kanji
@@ -99,7 +99,7 @@ def run_the_exercise_initiate(
 
 
 def run_the_exercise_chat(
-    lesson: str,
+    lessons_included: list[str],
     exercise_type: str,
     known_kanji: str,
     scheduled_kanji: str,
@@ -111,7 +111,7 @@ def run_the_exercise_chat(
     if len(messages) == 0:
         # we need to run the initiate exercise
         return run_the_exercise_initiate(
-            lesson=lesson,
+            lessons_included=lessons_included,
             exercise_type=exercise_type,
             known_kanji=known_kanji,
             scheduled_kanji=scheduled_kanji,

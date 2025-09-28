@@ -112,7 +112,7 @@ with gr.Blocks() as dashboard:
         with gr.Tab("Exercises"):
             with gr.Accordion("Select lesson and exercise type"):
                 with gr.Row():
-                    lessons_dropdown = gr.Dropdown(label="Lesson")
+                    lessons_dropdown = gr.Dropdown(label="Lesson", multiselect=True)
                     exercise_type_dropdown = gr.Dropdown(label="Exercise type")
                 with gr.Row():
                     exercise_initiate_btn = gr.Button("Initiate exercise")
