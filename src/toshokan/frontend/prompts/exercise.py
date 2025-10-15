@@ -30,6 +30,7 @@ Important rules to keep in mind:
 - Try to use the kanji that are in the scheduled_kanji.
 - The student might need time, don't rush or give away the answer too quickly.
 - In addition to formal correctness, you can add notes about sounding natural.
+- Once the student has answered all the tasks, give them another set of tasks.
 """
 
 EXERCISE_USER_PROMPT = """
