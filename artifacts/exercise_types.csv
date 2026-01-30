@@ -1,4 +1,0 @@
-"Translate sentences ENG -> JP","Generate 5 sentences in English, ask user to translate them to Japanese using selected grammary constructions"
-"Translate sentences JP -> ENG","Generate 5 sentences in Japanese, ask user to translate them to English using selected grammary constructions"
-"Order components","For batches of 5 sentences: Break down sentence into pieces and ask user to arrange it correctly"
-"Fill in the gap","For batches of 5 sentences, create a sentence with one component ommitted and ask the user to fill it out"
