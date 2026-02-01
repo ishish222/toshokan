@@ -1,0 +1,202 @@
+paths:
+  /v1/conversations/{conversation_id}/turns/{turn_id}/didascalia:
+    get:
+      tags: [Didascalia]
+      summary: Get didascalia (meta commentary) for a specific turn
+      operationId: getDidascaliaForTurn
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+        - $ref: "#/components/parameters/TurnId"
+      responses:
+        "200":
+          description: Didascalia for the turn.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DidascaliaResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Didascalia is still generating (async mode).
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying.
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                still_generating:
+                  value:
+                    error:
+                      code: conflict
+                      message: Didascalia is still generating.
+                      details:
+                        reason: didascalia_pending
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/conversations/{conversation_id}/didascalia/latest:
+    get:
+      tags: [Didascalia]
+      summary: Get didascalia for the latest turn in a conversation
+      operationId: getLatestDidascalia
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      responses:
+        "200":
+          description: Didascalia for latest turn.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DidascaliaResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Didascalia is still generating (async mode).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+components:
+  schemas:
+    DidascaliaVerdict:
+      type: string
+      enum: [good, needs_improvement, unclear]
+      description: High-level evaluation of user's last message in context.
+
+    DidascaliaSummary:
+      type: object
+      required: [verdict, message]
+      additionalProperties: false
+      properties:
+        verdict:
+          $ref: "#/components/schemas/DidascaliaVerdict"
+        message:
+          type: string
+          description: Short user-facing summary (e.g., "Natural and correct!")
+
+    DidascaliaUiHints:
+      type: object
+      additionalProperties: false
+      properties:
+        highlight_spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/HighlightSpan"
+
+    DidascaliaResponse:
+      type: object
+      required: [turn_id, summary]
+      additionalProperties: false
+      properties:
+        turn_id:
+          type: string
+        summary:
+          $ref: "#/components/schemas/DidascaliaSummary"
+        suggested_grammar_forms:
+          type: array
+          items:
+            $ref: "#/components/schemas/DidascaliaGrammarSuggestion"
+        kanji_focus:
+          type: array
+          items:
+            $ref: "#/components/schemas/KanjiFocusItem"
+        didascalia_corrections:
+          type: array
+          items:
+            $ref: "#/components/schemas/DidascaliaCorrection"
+        ui_hints:
+          $ref: "#/components/schemas/DidascaliaUiHints"
+
+    DidascaliaGrammarSuggestion:
+      type: object
+      additionalProperties: false
+      required:
+        - grammar_id
+        - label
+      properties:
+        grammar_id:
+          type: string
+          description: Stable identifier of the grammar construction
+          example: te_form
+        label:
+          type: string
+          description: Human-readable grammar name
+          example: "て形 (te-kei)"
+        why_now:
+          type: string
+          description: Explanation of why this grammar is relevant in this context
+          example: "Useful for making polite requests in this situation."
+        example:
+          type: object
+          additionalProperties: false
+          properties:
+            ja:
+              type: string
+              example: "少し待ってください。"
+            en:
+              type: string
+              example: "Please wait a moment."
+
+    DidascaliaCorrection:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - original
+        - suggestion
+        - explanation
+      properties:
+        type:
+          type: string
+          description: Category of the DidascaliaCorrection
+          enum:
+            - tense
+            - particle
+            - word_order
+            - conjugation
+            - politeness
+            - vocabulary
+            - kanji_usage
+            - other
+        original:
+          type: string
+          description: Original user text or fragment
+          example: "昨日、映画を見ます。"
+        suggestion:
+          type: string
+          description: Corrected or more natural version
+          example: "昨日、映画を見ました。"
+        explanation:
+          type: string
+          description: Why the suggestion is better or correct
+          example: "昨日 indicates past tense, so 見ました is natural here."
+        severity:
+          type: string
+          description: How much this affects understanding or correctness
+          enum: [minor, moderate, major]
+          default: minor

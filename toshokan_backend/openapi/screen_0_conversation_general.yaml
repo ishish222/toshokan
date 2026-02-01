@@ -1,0 +1,148 @@
+openapi: 3.1.0
+info:
+  title: Toshokan API
+  version: 0.1.0
+  description: >
+    OpenAPI 3.1 skeleton focused on Screen 5 (Guided Conversation: Practice chat + Didascalia panel + word lookup).
+    This spec defines the contract only (endpoints + schemas + errors). Business logic and storage are out of scope.
+
+servers:
+  - url: https://api.example.com
+    description: Production (placeholder)
+  - url: http://localhost:8000
+    description: Local dev
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Conversations
+    description: Conversation sessions and turns (practice chat)
+  - name: Didascalia
+    description: Meta commentary on turns (explanations/corrections/kanji notes)
+  - name: Tools
+    description: Auxiliary learning tools (dictionary lookup)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing/invalid authentication.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            unauthorized:
+              value:
+                error:
+                  code: unauthorized
+                  message: Missing or invalid credentials.
+
+    Forbidden:
+      description: Authenticated but not allowed (e.g., wrong user).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            forbidden:
+              value:
+                error:
+                  code: forbidden
+                  message: Not allowed to access this resource.
+
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            not_found:
+              value:
+                error:
+                  code: not_found
+                  message: Resource not found.
+
+    UnprocessableEntity:
+      description: Validation error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            validation:
+              value:
+                error:
+                  code: validation_error
+                  message: Request validation failed.
+                  details:
+                    field_errors:
+                      - field: user_message.text
+                        message: Must not be empty.
+
+    RateLimited:
+      description: Too many requests.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            rate_limited:
+              value:
+                error:
+                  code: rate_limited
+                  message: Too many requests. Please retry later.
+
+    ServerError:
+      description: Server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            server_error:
+              value:
+                error:
+                  code: internal_error
+                  message: Unexpected error.
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code.
+            message:
+              type: string
+              description: Human-readable error message.
+            details:
+              type: object
+              additionalProperties: true
+
+    ISODateTime:
+      type: string
+      format: date-time
+
+    LanguageCode:
+      type: string
+      description: BCP-47 language tag (simplified).
+      examples: ["ja", "en"]

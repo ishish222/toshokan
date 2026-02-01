@@ -1,0 +1,106 @@
+# --- Revised OpenAPI 3.1 for Screen 3: Dashboard (daily goals + calendar + streak) ---
+
+paths:
+  /v1/dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Get dashboard overview (daily goal status, calendar history, streak)
+      operationId: getDashboard
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          description: Start date for calendar view (inclusive).
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          description: End date for calendar view (inclusive).
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Dashboard data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+components:
+  schemas:
+    DashboardResponse:
+      type: object
+      required: [today, calendar, streak]
+      additionalProperties: false
+      properties:
+        today:
+          $ref: "#/components/schemas/DashboardToday"
+        calendar:
+          type: array
+          description: Daily goal achievement per calendar day.
+          items:
+            $ref: "#/components/schemas/DashboardCalendarDay"
+        streak:
+          $ref: "#/components/schemas/DashboardStreak"
+
+    DashboardToday:
+      type: object
+      required: [completed, target, achieved]
+      additionalProperties: false
+      properties:
+        completed:
+          type: integer
+          minimum: 0
+          description: Number of completed units today (aggregated across modules).
+        target:
+          type: integer
+          minimum: 1
+          description: Daily goal target.
+        achieved:
+          type: boolean
+          description: Whether today's goal has been achieved.
+
+    DashboardCalendarDay:
+      type: object
+      required: [date, completed, target, achieved]
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+        completed:
+          type: integer
+          minimum: 0
+          description: Completed units for this day.
+        target:
+          type: integer
+          minimum: 1
+        achieved:
+          type: boolean
+
+    DashboardStreak:
+      type: object
+      required: [current]
+      additionalProperties: false
+      properties:
+        current:
+          type: integer
+          minimum: 0
+          description: Current streak length (consecutive achieved days up to today).
+        last_achieved_date:
+          type: string
+          format: date
+          description: Last date included in the current streak (optional).

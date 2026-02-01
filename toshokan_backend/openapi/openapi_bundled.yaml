@@ -1,0 +1,1285 @@
+openapi: 3.1.0
+info:
+  title: Toshokan API
+  version: 0.1.0
+  description: >
+    OpenAPI 3.1 skeleton focused on Screen 5 (Guided Conversation: Practice chat + Didascalia panel + word lookup).
+    This spec defines the contract only (endpoints + schemas + errors). Business logic and storage are out of scope.
+
+servers:
+  - url: https://api.example.com
+    description: Production (placeholder)
+  - url: http://localhost:8000
+    description: Local dev
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Conversations
+    description: Conversation sessions and turns (practice chat)
+  - name: Didascalia
+    description: Meta commentary on turns (explanations/corrections/kanji notes)
+  - name: Tools
+    description: Auxiliary learning tools (dictionary lookup)
+
+paths:
+  /v1/me:
+    get:
+      tags: [Identity]
+      summary: Get current authenticated user profile
+      operationId: getMe
+      responses:
+        "200":
+          description: Current user profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Get dashboard overview (daily goal status, calendar history, streak)
+      operationId: getDashboard
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          description: Start date for calendar view (inclusive).
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          description: End date for calendar view (inclusive).
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Dashboard data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/modules/toshokan_conversation/goals:
+    get:
+      tags: [ConversationGoals]
+      summary: Get conversation module goals for the current user
+      operationId: getConversationGoals
+      responses:
+        "200":
+          description: Current conversation module goals.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationGoals"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags: [ConversationGoals]
+      summary: Replace conversation module goals for the current user
+      operationId: updateConversationGoals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationGoalsUpdate"
+      responses:
+        "200":
+          description: Updated conversation module goals.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationGoals"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/situations:suggest:
+    post:
+      tags: [Conversations]
+      summary: Generate a free-text conversation situation suggestion
+      operationId: suggestSituation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuggestSituationRequest"
+      responses:
+        "200":
+          description: Suggested situation text.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestSituationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/conversations/{conversation_id}/setup:
+    get:
+      tags: [Conversations]
+      summary: Get conversation setup
+      operationId: getConversationSetup
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      responses:
+        "200":
+          description: Conversation setup.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationSetup"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    patch:
+      tags: [Conversations]
+      summary: Update conversation setup
+      operationId: updateConversationSetup
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationSetupPatch"
+      responses:
+        "200":
+          description: Updated conversation setup.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationSetup"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/conversations/{conversation_id}:
+    get:
+      tags: [Conversations]
+      summary: Get conversation details (including recent turns)
+      operationId: getConversation
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+        - name: limit
+          in: query
+          required: false
+          description: Max number of most recent turns to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: before_turn_id
+          in: query
+          required: false
+          description: Pagination cursor to fetch turns before a given turn_id.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Conversation and recent turns.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationWithTurns"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    patch:
+      summary: Update conversation metadata
+      operationId: updateConversation
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationUpdate"
+      responses:
+        "200":
+          description: Updated conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+    delete:
+      summary: Archive conversation
+      operationId: archiveConversation
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Conversation archived
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+
+  /v1/conversations/{conversation_id}/turns:
+    post:
+      tags: [Conversations]
+      summary: Create a new turn (user message -> practice reply)
+      operationId: createTurn
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTurnRequest"
+      responses:
+        "200":
+          description: Turn created and practice reply generated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTurnResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Conflict (e.g., conversation closed/archived).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                conversation_closed:
+                  value:
+                    error:
+                      code: conflict
+                      message: Conversation is closed.
+                      details:
+                        reason: conversation_closed
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/conversations/{conversation_id}/preferences:
+    patch:
+      tags: [Conversations]
+      summary: Update conversation preferences affecting the practice view (e.g., hiragana hints)
+      operationId: updateConversationPreferences
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationPreferencesPatch"
+      responses:
+        "200":
+          description: Updated preferences.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationPreferences"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/tools/dictionary:lookup:
+    post:
+      tags: [Tools]
+      summary: Dictionary lookup (EN->JA or JA->EN) for the right-panel word lookup
+      operationId: dictionaryLookup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DictionaryLookupRequest"
+      responses:
+        "200":
+          description: Lookup results.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DictionaryLookupResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/conversations/{conversation_id}/turns/{turn_id}/didascalia:
+    get:
+      tags: [Didascalia]
+      summary: Get didascalia (meta commentary) for a specific turn
+      operationId: getDidascaliaForTurn
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+        - $ref: "#/components/parameters/TurnId"
+      responses:
+        "200":
+          description: Didascalia for the turn.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DidascaliaResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Didascalia is still generating (async mode).
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying.
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                still_generating:
+                  value:
+                    error:
+                      code: conflict
+                      message: Didascalia is still generating.
+                      details:
+                        reason: didascalia_pending
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/conversations/{conversation_id}/didascalia/latest:
+    get:
+      tags: [Didascalia]
+      summary: Get didascalia for the latest turn in a conversation
+      operationId: getLatestDidascalia
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      responses:
+        "200":
+          description: Didascalia for latest turn.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DidascaliaResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Didascalia is still generating (async mode).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /v1/conversations:
+    get:
+      summary: List past conversations
+      operationId: listConversations
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: archived
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: starred
+          in: query
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [last_activity_desc, created_desc, title_asc]
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of conversations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationListResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing/invalid authentication.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            unauthorized:
+              value:
+                error:
+                  code: unauthorized
+                  message: Missing or invalid credentials.
+
+    Forbidden:
+      description: Authenticated but not allowed (e.g., wrong user).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            forbidden:
+              value:
+                error:
+                  code: forbidden
+                  message: Not allowed to access this resource.
+
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            not_found:
+              value:
+                error:
+                  code: not_found
+                  message: Resource not found.
+
+    UnprocessableEntity:
+      description: Validation error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            validation:
+              value:
+                error:
+                  code: validation_error
+                  message: Request validation failed.
+                  details:
+                    field_errors:
+                      - field: user_message.text
+                        message: Must not be empty.
+
+    RateLimited:
+      description: Too many requests.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            rate_limited:
+              value:
+                error:
+                  code: rate_limited
+                  message: Too many requests. Please retry later.
+
+    ServerError:
+      description: Server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            server_error:
+              value:
+                error:
+                  code: internal_error
+                  message: Unexpected error.
+
+  parameters:
+    ConversationId:
+      name: conversation_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Conversation/session identifier.
+
+    TurnId:
+      name: turn_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Turn identifier (user message + practice reply).
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code.
+            message:
+              type: string
+              description: Human-readable error message.
+            details:
+              type: object
+              additionalProperties: true
+
+    ISODateTime:
+      type: string
+      format: date-time
+
+    LanguageCode:
+      type: string
+      description: BCP-47 language tag (simplified).
+      examples: ["ja", "en"]
+
+    Me:
+      type: object
+      required: [user_id, email, created_at]
+      additionalProperties: false
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+          maxLength: 80
+        created_at:
+          $ref: "#/components/schemas/ISODateTime"
+        onboarding:
+          type: object
+          additionalProperties: false
+          properties:
+            goals_configured:
+              type: boolean
+              default: false
+        defaults:
+          type: object
+          additionalProperties: false
+          properties:
+            hiragana_hint_enabled:
+              type: boolean
+              default: false
+
+    DashboardResponse:
+      type: object
+      required: [today, calendar, streak]
+      additionalProperties: false
+      properties:
+        today:
+          $ref: "#/components/schemas/DashboardToday"
+        calendar:
+          type: array
+          description: Daily goal achievement per calendar day.
+          items:
+            $ref: "#/components/schemas/DashboardCalendarDay"
+        streak:
+          $ref: "#/components/schemas/DashboardStreak"
+
+    DashboardToday:
+      type: object
+      required: [completed, target, achieved]
+      additionalProperties: false
+      properties:
+        completed:
+          type: integer
+          minimum: 0
+          description: Number of completed units today (aggregated across modules).
+        target:
+          type: integer
+          minimum: 1
+          description: Daily goal target.
+        achieved:
+          type: boolean
+          description: Whether today's goal has been achieved.
+
+    DashboardCalendarDay:
+      type: object
+      required: [date, completed, target, achieved]
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+        completed:
+          type: integer
+          minimum: 0
+          description: Completed units for this day.
+        target:
+          type: integer
+          minimum: 1
+        achieved:
+          type: boolean
+
+    DashboardStreak:
+      type: object
+      required: [current]
+      additionalProperties: false
+      properties:
+        current:
+          type: integer
+          minimum: 0
+          description: Current streak length (consecutive achieved days up to today).
+        last_achieved_date:
+          type: string
+          format: date
+          description: Last date included in the current streak (optional).
+
+    ConversationGoals:
+      type: object
+      required:
+        - daily_unit_target
+        - updated_at
+      additionalProperties: false
+      properties:
+        daily_unit_target:
+          type: integer
+          minimum: 0
+          maximum: 500
+          description: >
+            Daily target units contributed by the conversation module.
+            This does NOT replace the platform daily_goal.
+            A value of 0 means the module does not contribute to daily progress.
+        updated_at:
+          $ref: "#/components/schemas/ISODateTime"
+
+    ConversationGoalsUpdate:
+      type: object
+      required:
+        - daily_unit_target
+      additionalProperties: false
+      properties:
+        daily_unit_target:
+          type: integer
+          minimum: 0
+          maximum: 500
+
+    SuggestSituationRequest:
+      type: object
+      required: [formality]
+      additionalProperties: false
+      properties:
+        formality:
+          type: string
+          enum: [formal, informal]
+          description: Desired formality level for the suggested situation.
+
+    SuggestSituationResponse:
+      type: object
+      required: [text]
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          maxLength: 300
+          description: >
+            LLM-generated free-text description of a conversation situation
+            (e.g., "interaction with a cashier in a store").
+
+    ConversationSetup:
+      type: object
+      required:
+        - formality
+        - situation
+        - initiator
+        - grammar_focus
+      additionalProperties: false
+      properties:
+        formality:
+          type: string
+          enum: [formal, informal]
+          description: Formality level for this conversation.
+        situation:
+          type: string
+          maxLength: 500
+          description: Free-text description of the conversation situation.
+        initiator:
+          type: string
+          enum: [system, user]
+          description: Who initiates the conversation.
+        grammar_focus:
+          type: array
+          minItems: 0
+          maxItems: 30
+          description: Grammar constructions to focus on during this conversation.
+          items:
+            $ref: "#/components/schemas/GrammarTarget"
+
+    ConversationSetupPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        formality:
+          type: string
+          enum: [formal, informal]
+        situation:
+          type: string
+          maxLength: 500
+        initiator:
+          type: string
+          enum: [system, user]
+        grammar_focus:
+          type: array
+          minItems: 0
+          maxItems: 30
+          items:
+            $ref: "#/components/schemas/GrammarTarget"
+
+    GrammarTarget:
+      type: object
+      required: [id, label]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Internal grammar identifier.
+        label:
+          type: string
+          description: Human-readable grammar label (e.g., "て形").
+        description:
+          type: string
+          description: Short explanation of the grammar point.
+
+    Conversation:
+      type: object
+      required: [conversation_id, title, started_at, status]
+      properties:
+        conversation_id:
+          type: string
+        title:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        last_activity_at:
+          type: string
+          format: date-time
+        starred:
+          type: boolean
+        status:
+          type: string
+          enum: [active, archived]
+        setup:
+          $ref: "#/components/schemas/ConversationSetup"
+
+    ConversationPreferences:
+      type: object
+      required: [conversation_id, hiragana_hint_enabled]
+      properties:
+        conversation_id:
+          type: string
+        hiragana_hint_enabled:
+          type: boolean
+          description: If true, UI may show hiragana hints/reading aids.
+
+    ConversationPreferencesPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        hiragana_hint_enabled:
+          type: boolean
+
+    ConversationUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+        starred:
+          type: boolean
+
+    UserMessage:
+      type: object
+      required: [text]
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        input_language:
+          $ref: "#/components/schemas/LanguageCode"
+        hiragana_hint_enabled:
+          type: boolean
+          description: Client hint; server may also store per-conversation preference.
+
+    PracticeReply:
+      type: object
+      required: [text]
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          minLength: 1
+        translation_en:
+          type: string
+          description: Optional helper translation for beginners.
+        created_at:
+          $ref: "#/components/schemas/ISODateTime"
+
+    Turn:
+      type: object
+      required: [turn_id, user_message, practice_reply, created_at]
+      additionalProperties: false
+      properties:
+        turn_id:
+          type: string
+        created_at:
+          $ref: "#/components/schemas/ISODateTime"
+        user_message:
+          $ref: "#/components/schemas/UserMessage"
+        practice_reply:
+          $ref: "#/components/schemas/PracticeReply"
+
+    TurnState:
+      type: string
+      enum: [completed, pending, failed]
+
+    ConversationWithTurns:
+      type: object
+      required: [conversation_id, title, turns, preferences]
+      additionalProperties: false
+      properties:
+        conversation_id:
+          type: string
+        title:
+          type: string
+          description: Display name (e.g., "Ordering Food").
+        preferences:
+          $ref: "#/components/schemas/ConversationPreferences"
+        turns:
+          type: array
+          items:
+            $ref: "#/components/schemas/Turn"
+        next_cursor:
+          type: string
+          description: Pagination cursor (optional).
+
+    CreateTurnRequest:
+      type: object
+      required: [user_message]
+      additionalProperties: false
+      properties:
+        user_message:
+          $ref: "#/components/schemas/UserMessage"
+        client_context:
+          type: object
+          additionalProperties: false
+          properties:
+            timezone:
+              type: string
+            ui_locale:
+              type: string
+
+    CreateTurnResponse:
+      type: object
+      required: [turn_id, practice_reply, turn_state, didascalia_available]
+      additionalProperties: false
+      properties:
+        turn_id:
+          type: string
+        practice_reply:
+          $ref: "#/components/schemas/PracticeReply"
+        turn_state:
+          $ref: "#/components/schemas/TurnState"
+        didascalia_available:
+          type: boolean
+          description: If true, didascalia can be fetched (may still be generating depending on implementation).
+
+    DictionaryDirection:
+      type: string
+      enum: [en_to_ja, ja_to_en]
+
+    DictionaryLookupRequest:
+      type: object
+      required: [query, direction]
+      additionalProperties: false
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 200
+        direction:
+          $ref: "#/components/schemas/DictionaryDirection"
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 5
+
+    DictionaryResult:
+      type: object
+      required: [ja, en]
+      additionalProperties: false
+      properties:
+        ja:
+          type: string
+        reading:
+          type: string
+          description: Kana reading (optional).
+        en:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    DictionaryLookupResponse:
+      type: object
+      required: [query, direction, results]
+      additionalProperties: false
+      properties:
+        query:
+          type: string
+        direction:
+          $ref: "#/components/schemas/DictionaryDirection"
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/DictionaryResult"
+
+    HighlightSource:
+      type: string
+      enum: [user_message, practice_reply]
+
+    HighlightSpan:
+      type: object
+      required: [source, start, end, label]
+      additionalProperties: false
+      properties:
+        source:
+          $ref: "#/components/schemas/HighlightSource"
+        start:
+          type: integer
+          minimum: 0
+        end:
+          type: integer
+          minimum: 0
+        label:
+          type: string
+
+    KanjiReadingInfo:
+      type: object
+      additionalProperties: false
+      properties:
+        onyomi:
+          type: array
+          items:
+            type: string
+        kunyomi:
+          type: array
+          items:
+            type: string
+
+    ExamplePair:
+      type: object
+      required: [ja, en]
+      additionalProperties: false
+      properties:
+        ja:
+          type: string
+        en:
+          type: string
+
+    KanjiFocusItem:
+      type: object
+      required: [kanji, meaning]
+      additionalProperties: false
+      properties:
+        kanji:
+          type: string
+          minLength: 1
+          maxLength: 1
+        reading:
+          type: string
+          description: Common reading in this context (optional).
+        meaning:
+          type: string
+        readings:
+          $ref: "#/components/schemas/KanjiReadingInfo"
+        examples:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExamplePair"
+
+    DidascaliaVerdict:
+      type: string
+      enum: [good, needs_improvement, unclear]
+      description: High-level evaluation of user's last message in context.
+
+    DidascaliaSummary:
+      type: object
+      required: [verdict, message]
+      additionalProperties: false
+      properties:
+        verdict:
+          $ref: "#/components/schemas/DidascaliaVerdict"
+        message:
+          type: string
+          description: Short user-facing summary (e.g., "Natural and correct!")
+
+    DidascaliaUiHints:
+      type: object
+      additionalProperties: false
+      properties:
+        highlight_spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/HighlightSpan"
+
+    DidascaliaResponse:
+      type: object
+      required: [turn_id, summary]
+      additionalProperties: false
+      properties:
+        turn_id:
+          type: string
+        summary:
+          $ref: "#/components/schemas/DidascaliaSummary"
+        suggested_grammar_forms:
+          type: array
+          items:
+            $ref: "#/components/schemas/DidascaliaGrammarSuggestion"
+        kanji_focus:
+          type: array
+          items:
+            $ref: "#/components/schemas/KanjiFocusItem"
+        didascalia_corrections:
+          type: array
+          items:
+            $ref: "#/components/schemas/DidascaliaCorrection"
+        ui_hints:
+          $ref: "#/components/schemas/DidascaliaUiHints"
+
+    DidascaliaGrammarSuggestion:
+      type: object
+      additionalProperties: false
+      required:
+        - grammar_id
+        - label
+      properties:
+        grammar_id:
+          type: string
+          description: Stable identifier of the grammar construction
+          example: te_form
+        label:
+          type: string
+          description: Human-readable grammar name
+          example: "て形 (te-kei)"
+        why_now:
+          type: string
+          description: Explanation of why this grammar is relevant in this context
+          example: "Useful for making polite requests in this situation."
+        example:
+          type: object
+          additionalProperties: false
+          properties:
+            ja:
+              type: string
+              example: "少し待ってください。"
+            en:
+              type: string
+              example: "Please wait a moment."
+
+    DidascaliaCorrection:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - original
+        - suggestion
+        - explanation
+      properties:
+        type:
+          type: string
+          description: Category of the DidascaliaCorrection
+          enum:
+            - tense
+            - particle
+            - word_order
+            - conjugation
+            - politeness
+            - vocabulary
+            - kanji_usage
+            - other
+        original:
+          type: string
+          description: Original user text or fragment
+          example: "昨日、映画を見ます。"
+        suggestion:
+          type: string
+          description: Corrected or more natural version
+          example: "昨日、映画を見ました。"
+        explanation:
+          type: string
+          description: Why the suggestion is better or correct
+          example: "昨日 indicates past tense, so 見ました is natural here."
+        severity:
+          type: string
+          description: How much this affects understanding or correctness
+          enum: [minor, moderate, major]
+          default: minor
+
+    ConversationListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationListItem"
+        next_cursor:
+          type: string
+
+    ConversationListItem:
+      type: object
+      required: [conversation_id, title]
+      properties:
+        conversation_id:
+          type: string
+        title:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        last_activity_at:
+          type: string
+          format: date-time
+        starred:
+          type: boolean
+        status:
+          type: string
+        stats:
+          type: object
+          properties:
+            correct_responses:
+              type: integer
+            turns_total:
+              type: integer
