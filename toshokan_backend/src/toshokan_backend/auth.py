@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
+from urllib.parse import urlencode
+from urllib.request import Request as UrlRequest
+from urllib.request import urlopen
+import base64
+import hashlib
+import json
+import secrets
 
 import jwt
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -33,12 +40,14 @@ def get_cognito_config() -> dict:
     region = require_env("COGNITO_DOMAIN_REGION")
     pool_id = require_env("COGNITO_DOMAIN_USER_POOL_ID")
     client_id = require_env("COGNITO_DOMAIN_CLIENT_ID")
+    domain = require_env("COGNITO_DOMAIN")
     issuer = f"https://cognito-idp.{region}.amazonaws.com/{pool_id}"
     jwks_url = f"{issuer}/.well-known/jwks.json"
     return {
         "region": region,
         "pool_id": pool_id,
         "client_id": client_id,
+        "domain": domain,
         "issuer": issuer,
         "jwks_url": jwks_url,
     }
@@ -52,20 +61,21 @@ def get_jwks_client() -> jwt.PyJWKClient:
     return JWKS_CLIENT
 
 
-def extract_bearer_token(request: Request) -> str:
+def extract_id_token(request: Request) -> str:
     header = request.headers.get("Authorization")
-    if not header:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header missing.",
-        )
-    parts = header.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Authorization header format.",
-        )
-    return parts[1]
+    if header:
+        parts = header.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            return parts[1]
+
+    cookie_token = request.cookies.get("id_token")
+    if cookie_token:
+        return cookie_token
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authorization token missing.",
+    )
 
 
 def decode_id_token(id_token: str) -> dict:
@@ -120,6 +130,116 @@ def build_user(payload: dict) -> AuthUser:
     )
 
 
+def build_code_verifier() -> str:
+    return secrets.token_urlsafe(64)
+
+
+def build_code_challenge(code_verifier: str) -> str:
+    digest = hashlib.sha256(code_verifier.encode("utf-8")).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("utf-8")
+
+
+def build_state() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def build_login_url(redirect_uri: str, state: str, code_challenge: str) -> str:
+    config = get_cognito_config()
+    query = urlencode(
+        {
+            "response_type": "code",
+            "client_id": config["client_id"],
+            "redirect_uri": redirect_uri,
+            "scope": "openid email profile",
+            "state": state,
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
+        }
+    )
+    return f"{config['domain']}/oauth2/authorize?{query}"
+
+
+def exchange_code_for_tokens(
+    code: str, redirect_uri: str, code_verifier: str
+) -> dict:
+    config = get_cognito_config()
+    body = urlencode(
+        {
+            "grant_type": "authorization_code",
+            "client_id": config["client_id"],
+            "code": code,
+            "redirect_uri": redirect_uri,
+            "code_verifier": code_verifier,
+        }
+    ).encode("utf-8")
+    request = UrlRequest(
+        f"{config['domain']}/oauth2/token",
+        data=body,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+    with urlopen(request) as response:
+        payload = response.read()
+        return json.loads(payload.decode("utf-8"))
+
+
+def set_auth_cookies(response: Response, token_payload: dict, secure: bool) -> None:
+    expires_in = int(token_payload.get("expires_in", 3600))
+    access_token = token_payload.get("access_token")
+    id_token = token_payload.get("id_token")
+    refresh_token = token_payload.get("refresh_token")
+
+    if access_token:
+        response.set_cookie(
+            "access_token",
+            access_token,
+            httponly=True,
+            secure=secure,
+            samesite="Lax",
+            max_age=expires_in,
+        )
+    if id_token:
+        response.set_cookie(
+            "id_token",
+            id_token,
+            httponly=True,
+            secure=secure,
+            samesite="Lax",
+            max_age=expires_in,
+        )
+    if refresh_token:
+        response.set_cookie(
+            "refresh_token",
+            refresh_token,
+            httponly=True,
+            secure=secure,
+            samesite="Lax",
+            max_age=int(timedelta(days=30).total_seconds()),
+        )
+
+
+def clear_auth_cookies(response: Response) -> None:
+    for name in (
+        "access_token",
+        "id_token",
+        "refresh_token",
+        "oauth_state",
+        "pkce_verifier",
+    ):
+        response.delete_cookie(name)
+
+
+def build_logout_url(logout_uri: str) -> str:
+    config = get_cognito_config()
+    query = urlencode(
+        {
+            "client_id": config["client_id"],
+            "logout_uri": logout_uri,
+        }
+    )
+    return f"{config['domain']}/logout?{query}"
+
+
 def is_open_route(path: str) -> bool:
     if path == "/openapi.json":
         return True
@@ -128,6 +248,13 @@ def is_open_route(path: str) -> bool:
     if path.startswith("/redoc"):
         return True
     if path in {"/health", "/favicon.ico"}:
+        return True
+    if path in {
+        "/v1/login",
+        "/v1/login_done",
+        "/v1/logout",
+        "/v1/logout_done",
+    }:
         return True
     return False
 
@@ -138,7 +265,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         try:
-            id_token = extract_bearer_token(request)
+            id_token = extract_id_token(request)
             payload = decode_id_token(id_token)
             request.state.user = build_user(payload)
         except HTTPException as exc:

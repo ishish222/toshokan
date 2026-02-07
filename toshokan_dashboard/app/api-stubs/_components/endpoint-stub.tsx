@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -5,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { API_BASE_URL } from "@/lib/config";
 import { apiPaths, getPathById } from "@/lib/openapi";
 
 type EndpointStubProps = {
@@ -13,6 +17,9 @@ type EndpointStubProps = {
 
 export function EndpointStub({ pathId }: EndpointStubProps) {
   const apiPath = getPathById(pathId);
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState<Record<string, boolean>>({});
 
   if (!apiPath) {
     return (
@@ -52,6 +59,41 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
             ? JSON.stringify(operation.responseExample, null, 2)
             : "";
 
+          const responseValue = responses[operation.id] ?? responseExample;
+          const errorValue = errors[operation.id];
+          const isMeOperation =
+            apiPath.id === "me" && operation.id === "getMe";
+
+          const handleSend = async () => {
+            if (!isMeOperation) {
+              return;
+            }
+            setLoading((prev) => ({ ...prev, [operation.id]: true }));
+            setErrors((prev) => ({ ...prev, [operation.id]: "" }));
+            try {
+              const response = await fetch(`${API_BASE_URL}${apiPath.path}`, {
+                method: operation.method,
+                credentials: "include",
+              });
+              const payload = await response
+                .json()
+                .catch(() => ({ detail: "Invalid JSON response" }));
+              if (!response.ok) {
+                throw new Error(payload.detail || "Request failed");
+              }
+              setResponses((prev) => ({
+                ...prev,
+                [operation.id]: JSON.stringify(payload, null, 2),
+              }));
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : "Request failed";
+              setErrors((prev) => ({ ...prev, [operation.id]: message }));
+            } finally {
+              setLoading((prev) => ({ ...prev, [operation.id]: false }));
+            }
+          };
+
           return (
             <div key={operation.id} className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
@@ -73,8 +115,8 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
                       </Label>
                       <Input
                         id={`${operation.id}-api-base`}
-                        placeholder="http://localhost:8000"
-                        defaultValue="http://localhost:8000"
+                        placeholder={API_BASE_URL}
+                        defaultValue={API_BASE_URL}
                         readOnly
                       />
                     </div>
@@ -87,10 +129,19 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
                         className="min-h-[160px] font-mono text-xs"
                         placeholder="{ }"
                         defaultValue={requestExample}
+                        readOnly={isMeOperation}
                       />
                     </div>
-                    <Button disabled className="w-full">
-                      Send request (stub)
+                    <Button
+                      className="w-full"
+                      onClick={handleSend}
+                      disabled={!isMeOperation || loading[operation.id]}
+                    >
+                      {isMeOperation
+                        ? loading[operation.id]
+                          ? "Sending..."
+                          : "Send request"
+                        : "Send request (stub)"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -103,10 +154,13 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
                     <p className="text-sm text-muted-foreground">
                       A successful response will appear here once wired up.
                     </p>
+                    {errorValue ? (
+                      <p className="text-sm text-destructive">{errorValue}</p>
+                    ) : null}
                     <Textarea
                       className="min-h-[220px] font-mono text-xs"
                       placeholder="{ }"
-                      defaultValue={responseExample}
+                      value={responseValue}
                       readOnly
                     />
                   </CardContent>

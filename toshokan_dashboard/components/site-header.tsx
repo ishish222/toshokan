@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/lib/config";
+import AuthStatus from "@/components/auth-status";
 
 export function SiteHeader() {
   return (
@@ -24,6 +28,13 @@ export function SiteHeader() {
           <Button asChild variant="secondary" size="sm">
             <Link href="/api-stubs">Endpoints</Link>
           </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/login">Sign in</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <a href={`${API_BASE_URL}/v1/logout`}>Sign out</a>
+          </Button>
+          <AuthStatus />
         </nav>
       </div>
     </header>
