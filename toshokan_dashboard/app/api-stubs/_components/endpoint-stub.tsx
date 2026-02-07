@@ -132,7 +132,7 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
               variant={item.id === pathId ? "default" : "outline"}
               size="sm"
             >
-              <Link href={item.route}>{item.path}</Link>
+              <Link href={item.exampleRoute}>{item.path}</Link>
             </Button>
           ))}
         </div>

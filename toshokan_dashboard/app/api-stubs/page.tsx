@@ -15,7 +15,7 @@ export default function ApiStubIndexPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {apiPaths.map((endpoint) => (
-          <Link key={endpoint.id} href={endpoint.route}>
+          <Link key={endpoint.id} href={endpoint.exampleRoute}>
             <Card className="h-full transition hover:border-primary/60">
               <CardHeader>
                 <CardTitle className="text-base">{endpoint.path}</CardTitle>
