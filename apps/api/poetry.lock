@@ -531,6 +531,24 @@ type = "directory"
 url = "../../packages/modules/toshokan_conversation"
 
 [[package]]
+name = "toshokan-goals"
+version = "0.1.0"
+description = "Toshokan goals feature module."
+optional = false
+python-versions = ">=3.12,<4.0"
+groups = ["main"]
+files = []
+develop = true
+
+[package.dependencies]
+fastapi = ">=0.128.0,<0.129.0"
+pydantic = ">=2.0.0,<3.0.0"
+
+[package.source]
+type = "directory"
+url = "../../packages/modules/toshokan_goals"
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
@@ -579,4 +597,4 @@ standard = ["colorama (>=0.4) ; sys_platform == \"win32\"", "httptools (>=0.6.3)
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "ba3291002738368393339c8e43008e98a4904ed32f03851d7ad5a457584e9da3"
+content-hash = "6b6c8e9290ded561193d43d6f9e6e0fd1d343dd15a12856c4027fe7d7a5157a5"

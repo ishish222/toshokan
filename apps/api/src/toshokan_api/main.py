@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from dotenv import find_dotenv, load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import conversations, dashboard, didascalia, identity, tools
+from .api import conversations, didascalia, identity, tools
 from .auth import AuthMiddleware
 from toshokan_conversation.api import conversation_goals
+from toshokan_goals.api import router as goals_router
 
 load_dotenv(find_dotenv())
 
@@ -31,7 +30,7 @@ def create_app() -> FastAPI:
     )
     api_prefix = "/v1"
     app.include_router(identity.router, prefix=api_prefix)
-    app.include_router(dashboard.router, prefix=api_prefix)
+    app.include_router(goals_router, prefix=api_prefix)
     app.include_router(conversation_goals.router, prefix=api_prefix)
     app.include_router(conversations.router, prefix=api_prefix)
     app.include_router(didascalia.router, prefix=api_prefix)

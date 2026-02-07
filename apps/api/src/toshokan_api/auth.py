@@ -183,19 +183,32 @@ def exchange_code_for_tokens(
         return json.loads(payload.decode("utf-8"))
 
 
+def get_auth_cookie_samesite() -> str:
+    return os.environ.get("AUTH_COOKIE_SAMESITE", "Lax")
+
+
+def get_auth_cookie_secure(default_secure: bool) -> bool:
+    override = os.environ.get("AUTH_COOKIE_SECURE")
+    if override is None:
+        return default_secure
+    return override.lower() in {"1", "true", "yes", "on"}
+
+
 def set_auth_cookies(response: Response, token_payload: dict, secure: bool) -> None:
     expires_in = int(token_payload.get("expires_in", 3600))
     access_token = token_payload.get("access_token")
     id_token = token_payload.get("id_token")
     refresh_token = token_payload.get("refresh_token")
+    samesite = get_auth_cookie_samesite()
+    secure_cookie = get_auth_cookie_secure(secure)
 
     if access_token:
         response.set_cookie(
             "access_token",
             access_token,
             httponly=True,
-            secure=secure,
-            samesite="Lax",
+            secure=secure_cookie,
+            samesite=samesite,
             max_age=expires_in,
         )
     if id_token:
@@ -203,8 +216,8 @@ def set_auth_cookies(response: Response, token_payload: dict, secure: bool) -> N
             "id_token",
             id_token,
             httponly=True,
-            secure=secure,
-            samesite="Lax",
+            secure=secure_cookie,
+            samesite=samesite,
             max_age=expires_in,
         )
     if refresh_token:
@@ -212,13 +225,15 @@ def set_auth_cookies(response: Response, token_payload: dict, secure: bool) -> N
             "refresh_token",
             refresh_token,
             httponly=True,
-            secure=secure,
-            samesite="Lax",
+            secure=secure_cookie,
+            samesite=samesite,
             max_age=int(timedelta(days=30).total_seconds()),
         )
 
 
 def clear_auth_cookies(response: Response) -> None:
+    samesite = get_auth_cookie_samesite()
+    secure_cookie = get_auth_cookie_secure(False)
     for name in (
         "access_token",
         "id_token",
@@ -226,7 +241,7 @@ def clear_auth_cookies(response: Response) -> None:
         "oauth_state",
         "pkce_verifier",
     ):
-        response.delete_cookie(name)
+        response.delete_cookie(name, samesite=samesite, secure=secure_cookie)
 
 
 def build_logout_url(logout_uri: str) -> str:
@@ -273,7 +288,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 status_code=exc.status_code,
                 content={"detail": exc.detail},
             )
-        except Exception as exc:
+        except Exception:
             logging.exception("Auth error")
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

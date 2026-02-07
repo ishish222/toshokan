@@ -20,6 +20,9 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [queryParams, setQueryParams] = useState<
+    Record<string, Record<string, string>>
+  >({});
 
   if (!apiPath) {
     return (
@@ -61,20 +64,36 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
 
           const responseValue = responses[operation.id] ?? responseExample;
           const errorValue = errors[operation.id];
-          const isMeOperation =
-            apiPath.id === "me" && operation.id === "getMe";
+          const isSendableOperation =
+            operation.id === "getMe" || operation.id === "getDashboard";
+          const queryValues =
+            queryParams[operation.id] ??
+            operation.queryParams?.reduce<Record<string, string>>(
+              (acc, param) => {
+                acc[param.name] = param.example ?? "";
+                return acc;
+              },
+              {}
+            );
 
           const handleSend = async () => {
-            if (!isMeOperation) {
+            if (!isSendableOperation) {
               return;
             }
             setLoading((prev) => ({ ...prev, [operation.id]: true }));
             setErrors((prev) => ({ ...prev, [operation.id]: "" }));
             try {
-              const response = await fetch(`${API_BASE_URL}${apiPath.path}`, {
-                method: operation.method,
-                credentials: "include",
-              });
+              const queryString =
+                queryValues && operation.queryParams?.length
+                  ? `?${new URLSearchParams(queryValues).toString()}`
+                  : "";
+              const response = await fetch(
+                `${API_BASE_URL}${apiPath.path}${queryString}`,
+                {
+                  method: operation.method,
+                  credentials: "include",
+                }
+              );
               const payload = await response
                 .json()
                 .catch(() => ({ detail: "Invalid JSON response" }));
@@ -129,15 +148,43 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
                         className="min-h-[160px] font-mono text-xs"
                         placeholder="{ }"
                         defaultValue={requestExample}
-                        readOnly={isMeOperation}
+                        readOnly={isSendableOperation}
                       />
                     </div>
+                    {operation.queryParams?.length ? (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium">Query parameters</p>
+                        <div className="grid gap-3">
+                          {operation.queryParams.map((param) => (
+                            <div key={param.name} className="space-y-1">
+                              <Label htmlFor={`${operation.id}-${param.name}`}>
+                                {param.name}
+                              </Label>
+                              <Input
+                                id={`${operation.id}-${param.name}`}
+                                value={queryValues?.[param.name] ?? ""}
+                                onChange={(event) => {
+                                  const value = event.target.value;
+                                  setQueryParams((prev) => ({
+                                    ...prev,
+                                    [operation.id]: {
+                                      ...(prev[operation.id] ?? {}),
+                                      [param.name]: value,
+                                    },
+                                  }));
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                     <Button
                       className="w-full"
                       onClick={handleSend}
-                      disabled={!isMeOperation || loading[operation.id]}
+                      disabled={!isSendableOperation || loading[operation.id]}
                     >
-                      {isMeOperation
+                      {isSendableOperation
                         ? loading[operation.id]
                           ? "Sending..."
                           : "Send request"
