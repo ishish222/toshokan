@@ -1,17 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+from dotenv import find_dotenv, load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import (
-    conversations,
-    conversation_goals,
-    dashboard,
-    didascalia,
-    identity,
-    tools,
-)
+from .api import conversations, dashboard, didascalia, identity, tools
 from .auth import AuthMiddleware
+from toshokan_conversation.api import conversation_goals
+
+load_dotenv(find_dotenv())
 
 
 def create_app() -> FastAPI:
@@ -20,6 +19,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
+            "https://dashboard.local:3000",
             "https://127.0.0.1:3000",
             "https://localhost:3000",
             "http://127.0.0.1:3000",

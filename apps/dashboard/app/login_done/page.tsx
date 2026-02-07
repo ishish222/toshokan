@@ -37,7 +37,8 @@ export default function LoginDonePage() {
     }
 
     setStatus("loading");
-    const redirectUrl = new URL(`${API_BASE_URL}/v1/login_done`);
+    const apiBaseUrl = API_BASE_URL || window.location.origin;
+    const redirectUrl = new URL(`${apiBaseUrl}/v1/login_done`);
     redirectUrl.searchParams.set("code", code);
     redirectUrl.searchParams.set("state", state);
     window.location.href = redirectUrl.toString();

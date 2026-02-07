@@ -513,6 +513,24 @@ typing-extensions = {version = ">=4.10.0", markers = "python_version < \"3.13\""
 full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.18)", "pyyaml"]
 
 [[package]]
+name = "toshokan-conversation"
+version = "0.1.0"
+description = "Toshokan conversation feature module."
+optional = false
+python-versions = ">=3.12,<4.0"
+groups = ["main"]
+files = []
+develop = true
+
+[package.dependencies]
+fastapi = ">=0.128.0,<0.129.0"
+pydantic = ">=2.0.0,<3.0.0"
+
+[package.source]
+type = "directory"
+url = "../../packages/modules/toshokan_conversation"
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
@@ -561,4 +579,4 @@ standard = ["colorama (>=0.4) ; sys_platform == \"win32\"", "httptools (>=0.6.3)
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "d0b5071ee905bfa896bcf9093edd4a580591036a65ab8034f2beb777f9594f8b"
+content-hash = "ba3291002738368393339c8e43008e98a4904ed32f03851d7ad5a457584e9da3"

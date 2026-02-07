@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:https": "next dev --experimental-https --experimental-https-key ../../cert/server.key --experimental-https-cert ../../cert/server.crt",
+    "dev:https": "NODE_EXTRA_CA_CERTS=\"/Users/tsalacinski/Library/Application Support/mkcert/rootCA.pem\" next dev --experimental-https --experimental-https-key ../../../cert/dashboard.local.key --experimental-https-cert ../../../cert/dashboard.local.crt",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

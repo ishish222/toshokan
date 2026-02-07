@@ -1,1 +1,0 @@
-"""Toshokan backend application package."""

@@ -12,11 +12,15 @@ dependencies = [
     "uvicorn (>=0.40.0,<0.41.0)",
     "pyjwt (>=2.11.0,<3.0.0)",
     "python-dotenv (>=1.2.1,<2.0.0)",
-    "cryptography (>=46.0.4,<47.0.0)"
+    "cryptography (>=46.0.4,<47.0.0)",
+    "toshokan-conversation @ file:../../packages/modules/toshokan_conversation"
 ]
-packages = [{include = "toshokan_backend", from = "src"}]
+packages = [{include = "toshokan_api", from = "src"}]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+toshokan-conversation = {path = "../../packages/modules/toshokan_conversation", develop = true}

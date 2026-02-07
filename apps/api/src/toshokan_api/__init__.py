@@ -1,0 +1,1 @@
+"""Toshokan API application package."""

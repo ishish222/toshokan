@@ -40,18 +40,18 @@ def get_me(request: Request) -> Me:
 
 
 def get_frontend_base_url() -> str:
-    return os.environ.get("FRONTEND_BASE_URL", "https://127.0.0.1:3000")
+    return os.environ.get("FRONTEND_BASE_URL", "https://dashboard.local:3000")
 
 
 def get_login_redirect_uri() -> str:
-    override = os.environ.get("COGNITO_LOGIN_REDIRECT_URI")
+    override = os.environ.get("COGNITO_DOMAIN_REDIRECT_URI_LOGIN")
     if override:
         return override
     return f"{get_frontend_base_url()}/login_done"
 
 
 def get_logout_redirect_uri() -> str:
-    override = os.environ.get("COGNITO_LOGOUT_REDIRECT_URI")
+    override = os.environ.get("COGNITO_DOMAIN_REDIRECT_URI_LOGOUT")
     if override:
         return override
     return f"{get_frontend_base_url()}/logout_done"

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from ..schemas import ConversationGoalsUpdate
+from .schemas import ConversationGoalsUpdate
 
 router = APIRouter(tags=["ConversationGoals"])
 
