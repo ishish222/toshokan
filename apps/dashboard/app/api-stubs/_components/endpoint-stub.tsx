@@ -20,6 +20,9 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [requestBodies, setRequestBodies] = useState<Record<string, string>>(
+    {}
+  );
   const [queryParams, setQueryParams] = useState<
     Record<string, Record<string, string>>
   >({});
@@ -64,8 +67,14 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
 
           const responseValue = responses[operation.id] ?? responseExample;
           const errorValue = errors[operation.id];
-          const isSendableOperation =
-            operation.id === "getMe" || operation.id === "getDashboard";
+          const isSendableOperation = [
+            "getMe",
+            "getDashboard",
+            "getConversationGoals",
+            "updateConversationGoals",
+          ].includes(operation.id);
+          const requestBodyValue =
+            requestBodies[operation.id] ?? requestExample;
           const queryValues =
             queryParams[operation.id] ??
             operation.queryParams?.reduce<Record<string, string>>(
@@ -87,11 +96,22 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
                 queryValues && operation.queryParams?.length
                   ? `?${new URLSearchParams(queryValues).toString()}`
                   : "";
+              const shouldSendBody = !["GET", "HEAD"].includes(
+                operation.method
+              );
+              const bodyPayload =
+                shouldSendBody && requestBodyValue
+                  ? JSON.parse(requestBodyValue)
+                  : undefined;
               const response = await fetch(
                 `${API_BASE_URL}${apiPath.path}${queryString}`,
                 {
                   method: operation.method,
                   credentials: "include",
+                  headers: shouldSendBody
+                    ? { "Content-Type": "application/json" }
+                    : undefined,
+                  body: shouldSendBody ? JSON.stringify(bodyPayload) : undefined,
                 }
               );
               const payload = await response
@@ -147,8 +167,14 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
                         id={`${operation.id}-request-body`}
                         className="min-h-[160px] font-mono text-xs"
                         placeholder="{ }"
-                        defaultValue={requestExample}
-                        readOnly={isSendableOperation}
+                        value={requestBodyValue}
+                        readOnly={operation.method === "GET"}
+                        onChange={(event) =>
+                          setRequestBodies((prev) => ({
+                            ...prev,
+                            [operation.id]: event.target.value,
+                          }))
+                        }
                       />
                     </div>
                     {operation.queryParams?.length ? (
