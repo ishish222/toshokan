@@ -10,10 +10,12 @@ from .api import (
     identity,
     tools,
 )
+from .auth import AuthMiddleware
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Toshokan API")
+    app.add_middleware(AuthMiddleware)
     api_prefix = "/v1"
     app.include_router(identity.router, prefix=api_prefix)
     app.include_router(dashboard.router, prefix=api_prefix)

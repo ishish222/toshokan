@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel
@@ -39,3 +40,20 @@ class DictionaryLookupRequest(BaseModel):
     query: str
     direction: Literal["en_to_ja", "ja_to_en"]
     limit: Optional[int] = 5
+
+
+class MeOnboarding(BaseModel):
+    goals_configured: bool = False
+
+
+class MeDefaults(BaseModel):
+    hiragana_hint_enabled: bool = False
+
+
+class Me(BaseModel):
+    user_id: str
+    email: str
+    created_at: datetime
+    display_name: Optional[str] = None
+    onboarding: Optional[MeOnboarding] = None
+    defaults: Optional[MeDefaults] = None
