@@ -10,11 +10,23 @@ class SuggestSituationRequest(BaseModel):
     formality: Literal["formal", "informal"]
 
 
+class ConversationSetup(BaseModel):
+    formality: Literal["formal", "informal"]
+    situation: str
+    initiator: Literal["system", "user"]
+    grammar_focus: List[dict]
+
+
 class ConversationSetupPatch(BaseModel):
     formality: Optional[Literal["formal", "informal"]] = None
     situation: Optional[str] = None
     initiator: Optional[Literal["system", "user"]] = None
     grammar_focus: Optional[List[dict]] = None
+
+
+class ConversationCreateRequest(BaseModel):
+    title: Optional[str] = None
+    setup: ConversationSetup
 
 
 class ConversationGoalsUpdate(BaseModel):

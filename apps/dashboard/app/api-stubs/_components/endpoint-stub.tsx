@@ -61,17 +61,20 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
           const requestExample = operation.requestExample
             ? JSON.stringify(operation.requestExample, null, 2)
             : "";
-          const responseExample = operation.responseExample
+          const responseExampleText = operation.responseExample
             ? JSON.stringify(operation.responseExample, null, 2)
             : "";
 
-          const responseValue = responses[operation.id] ?? responseExample;
+          const responseValue = responses[operation.id] ?? responseExampleText;
           const errorValue = errors[operation.id];
           const isSendableOperation = [
             "getMe",
             "getDashboard",
             "getConversationGoals",
             "updateConversationGoals",
+            "createConversation",
+            "listConversations",
+            "archiveConversation",
           ].includes(operation.id);
           const requestBodyValue =
             requestBodies[operation.id] ?? requestExample;
@@ -94,7 +97,13 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
             try {
               const queryString =
                 queryValues && operation.queryParams?.length
-                  ? `?${new URLSearchParams(queryValues).toString()}`
+                  ? `?${new URLSearchParams(
+                      Object.fromEntries(
+                        Object.entries(queryValues).filter(
+                          ([, value]) => value.trim() !== ""
+                        )
+                      )
+                    ).toString()}`
                   : "";
               const shouldSendBody = !["GET", "HEAD"].includes(
                 operation.method

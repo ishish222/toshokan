@@ -515,6 +515,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ConversationListResponse"
+    post:
+      tags: [Conversations]
+      summary: Create a new conversation
+      operationId: createConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationCreateRequest"
+      responses:
+        "200":
+          description: Conversation created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/ServerError"
 
 components:
   securitySchemes:
@@ -914,6 +939,17 @@ components:
           type: string
         starred:
           type: boolean
+
+    ConversationCreateRequest:
+      type: object
+      required: [setup]
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          description: Optional display name for the conversation.
+        setup:
+          $ref: "#/components/schemas/ConversationSetup"
 
     UserMessage:
       type: object
