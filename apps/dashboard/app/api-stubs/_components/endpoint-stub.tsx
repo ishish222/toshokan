@@ -75,6 +75,7 @@ export function EndpointStub({ pathId }: EndpointStubProps) {
             "createConversation",
             "listConversations",
             "archiveConversation",
+            "listConversationGrammarTargets",
           ].includes(operation.id);
           const requestBodyValue =
             requestBodies[operation.id] ?? requestExample;

@@ -10,6 +10,9 @@ uv.lock
 # Cursor
 .cursor
 
+# macOS
+.DS_Store
+
 # Distribution / packaging
 .Python
 build/

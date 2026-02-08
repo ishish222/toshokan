@@ -15,6 +15,7 @@ packages = [{include = "toshokan_conversation"}]
 
 [tool.poetry]
 packages = [{include = "toshokan_conversation"}]
+include = ["toshokan_conversation/adapters/*.json"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

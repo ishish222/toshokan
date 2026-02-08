@@ -9,7 +9,11 @@ from ..schemas import (
     CreateTurnRequest,
     SuggestSituationRequest,
 )
-from toshokan_conversation.adapters import InMemoryConversationRepository, SystemClock
+from toshokan_conversation.adapters import (
+    InMemoryConversationRepository,
+    SystemClock,
+    get_default_grammar_targets,
+)
 from toshokan_conversation.app import ConversationService
 from toshokan_conversation.domain import ConversationSetup, GrammarTarget
 
@@ -79,14 +83,18 @@ def create_conversation(
         formality=payload.setup.formality,
         situation=payload.setup.situation,
         initiator=payload.setup.initiator,
-        grammar_focus=[
-            GrammarTarget(
-                id=item.get("id", ""),
-                label=item.get("label", ""),
-                description=item.get("description"),
-            )
-            for item in payload.setup.grammar_focus
-        ],
+        grammar_focus=(
+            get_default_grammar_targets()
+            if not payload.setup.grammar_focus
+            else [
+                GrammarTarget(
+                    id=item.get("id", ""),
+                    label=item.get("label", ""),
+                    description=item.get("description"),
+                )
+                for item in payload.setup.grammar_focus
+            ]
+        ),
     )
     conversation = _service.create(user_id, payload.title, setup)
     return {

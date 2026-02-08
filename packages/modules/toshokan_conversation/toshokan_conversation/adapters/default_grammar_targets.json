@@ -1,0 +1,272 @@
+[
+  {
+    "id": "lesson-1-dictionary-forms",
+    "label": "Lesson 1 - dictionary forms",
+    "description": "This lesson is about the dictionary forms of Japanese words"
+  },
+  {
+    "id": "lesson-2-informal-forms",
+    "label": "Lesson 2 - informal forms",
+    "description": "This lesson is about the informal forms of Japanese words"
+  },
+  {
+    "id": "lesson-3-masu-forms",
+    "label": "Lesson 3 - ~ます forms",
+    "description": "This lesson is about using the ~ます forms"
+  },
+  {
+    "id": "lesson-4-present-future-tense",
+    "label": "Lesson 4 - present-future tense",
+    "description": "This lesson is about sentences in the present-future tense"
+  },
+  {
+    "id": "lesson-5-past-tense",
+    "label": "Lesson 5 - past tense",
+    "description": "This lesson is about sentences in the past tense"
+  },
+  {
+    "id": "lesson-6-i-adjectives",
+    "label": "Lesson 6 - i-ajectives",
+    "description": "This lesson is about creating various forms of i-adjectives"
+  },
+  {
+    "id": "lesson-7-na-adjectives",
+    "label": "Lesson 7 - na-adjectives",
+    "description": "This lesson is about creating various forms of na-adjectives"
+  },
+  {
+    "id": "lesson-8-relative-location",
+    "label": "Lesson 8 - relative location",
+    "description": "This lesson is about using relative locations, e.g., 右, 左, 前, 後ろ, 中, 上, 下, そば, となり, 間. Please create some sample sentences and ask user to properly translate them into Japanese using the location descriptons"
+  },
+  {
+    "id": "lesson-9-placeholder",
+    "label": "Lesson 9 - (placeholder)",
+    "description": "This lesson is a placeholder, please disregard"
+  },
+  {
+    "id": "lesson-10-shimashou-form",
+    "label": "Lesson 10 - しましょう form (let's)",
+    "description": "This lesson is about practicing the しましょう form. Ask user to create this form from example verbs or to translate some sentences"
+  },
+  {
+    "id": "lesson-11-donna-sentences",
+    "label": "Lesson 11 - どんな - sentences",
+    "description": "Ask user to create some questions using どんな and then to answer them"
+  },
+  {
+    "id": "lesson-12-counters-tsu-mai-nin",
+    "label": "Lesson 12 - counters: ~つ, ~枚, ~人",
+    "description": "Practice the use of ~つ, ~枚, ~人 counters with the user by asking them to translate some sentences. Please focus only on counters mentioned, other are covered in different lessons."
+  },
+  {
+    "id": "lesson-13-counters-hon-hai-hiki",
+    "label": "Lesson 13 - counters: ~本, ~杯, ~匹",
+    "description": "Practice the use of ~本, ~杯, ~匹 counters with the user by asking them to translate some sentences. Please focus only on counters mentioned, other are covered in different lessons."
+  },
+  {
+    "id": "lesson-14-counters-ken-ko-satsu",
+    "label": "Lesson 14 - counters: ~軒, ~個, ~冊",
+    "description": "Practice the use of ~軒, ~個, ~冊 counters with the user by asking them to translate some sentences. Please focus only on counters mentioned, other are covered in different lessons."
+  },
+  {
+    "id": "lesson-16-te-form-requests",
+    "label": "Lesson 16 - ~て form for formal and informal requests",
+    "description": "This lesson is about using the ~て form to make formal requests. Ask the user to translate some sentences."
+  },
+  {
+    "id": "lesson-17-te-form-permission-deny",
+    "label": "Lesson 17 - ~て form for asking permission and denying",
+    "description": "This lesson is about using the ~て form to ask for permission and potentially denying permission (~てもいいですか/ーてはいけません). Come up with some examples to practice."
+  },
+  {
+    "id": "lesson-18-te-form-joining",
+    "label": "Lesson 18 - ~て form for joining sentences",
+    "description": "This lesson is about using the ~て form to join sentences, also with i-adjectives, na-adjectives and nouns"
+  },
+  {
+    "id": "lesson-19-shimashoka-form",
+    "label": "Lesson 19 - しましょか form (let me)",
+    "description": "Ask user to compose some sentences or translate some sentences that use the しましょか form to offer assistance"
+  },
+  {
+    "id": "lesson-20-dates-hours-minutes",
+    "label": "Lesson 20 - dates, hours, minutes",
+    "description": "Practice with the user usage of dates, months, days of months, days of weeks, hours and minutes in configurations that indicate some hour or a period"
+  },
+  {
+    "id": "lesson-21-kara-reason",
+    "label": "Lesson 21 - から, explaining reason",
+    "description": "Practice with the user usage of から particle by explaining reasons (two sentences, second ending with から). Mix the formal/informal mode and future-present/past tenses"
+  },
+  {
+    "id": "lesson-22-ku-ni-adverbs",
+    "label": "Lesson 22 - ~く/~に, creating adverbs from い-adjectives and な-adjectives",
+    "description": "Practice with the user converting known い-adjectives and な-adjectives into adverbs"
+  },
+  {
+    "id": "lesson-23-adjective-negation",
+    "label": "Lesson 23 - い-adjectives and な-adjectives negation",
+    "description": "Practice with the user negating known い-adjectives and な-adjectives. Mix the formal/informal mode and future-present/past tenses"
+  },
+  {
+    "id": "lesson-24-teiru-resultative",
+    "label": "Lesson 24 - 〜ている・〜ています - resultative context",
+    "description": "Practice with the user the usage of ~ている and ~ています in the resultative context. Mix the formal/informal mode and future-present/past tenses"
+  },
+  {
+    "id": "lesson-25-teiru-progressive",
+    "label": "Lesson 25 - 〜ている・〜ています - progressive context",
+    "description": "Practice with the user the usage of ~ている and ~ています in the progressive context. Mix the formal/informal mode and future-present/past tenses"
+  },
+  {
+    "id": "lesson-26-teiru-resultative-progressive",
+    "label": "Lesson 26 - 〜ている・〜ています - resultative and progressive context",
+    "description": "Practice with the user the usage of ~ている and ~ています in the resultative and progressive context. Mix the formal/informal mode and future-present/past tenses"
+  },
+  {
+    "id": "lesson-27-n1-wa-n2-ga",
+    "label": "Lesson 27 - N1は、N2が。。。- descriptions of persons and objects",
+    "description": "Practice with the user the usage of N1は、N2が。。。in describing persons and objects. Ask them to translate some sentences to and from Japanese. Mix the formal/informal mode and future-present/past tenses"
+  },
+  {
+    "id": "lesson-28-tabeni-iku",
+    "label": "Lesson 28 - 食べに行く - combining the 〜に form with verbs of movement",
+    "description": "Practice with the user combining the 〜に form with verbs of movement. Mix the formal/informal mode and future-present/past tenses"
+  },
+  {
+    "id": "lesson-29-motte-kuru",
+    "label": "Lesson 29 - 持って来る - combining the 〜て form with verbs of movement",
+    "description": "Practice with the user combining the 〜て form with verbs of movement. Mix the formal/informal mode and future-present/past tenses"
+  },
+  {
+    "id": "lesson-30-negating-verbs-informal",
+    "label": "Lesson 30 - negating verbs in informal mode",
+    "description": "Practice with the user negating verbs in informal mode. Mix the future-present/past tenses"
+  },
+  {
+    "id": "lesson-31-naide-kudasai",
+    "label": "Lesson 31 - ~ないでください - asking someone not to do something",
+    "description": "Practice with the user asking someone not to do something with the ~ないでください form. Mix the formal/informal mode and future-present/past tenses"
+  },
+  {
+    "id": "lesson-288-a-no-houga-b-yori",
+    "label": "Lesson 288 - AのほうがBより - sentences",
+    "description": "This lesson is about practicing the use of the AのほうがBより/AとBとどっちのほうが/[class of items]の中でAがいちばん　construction (to compare things) by asking student to translate some sentences from and to Japanese"
+  },
+  {
+    "id": "lesson-290-adjective-noun-no",
+    "label": "Lesson 290 - adjective/noun +の - sentences",
+    "description": "This lesson is about practicing the use of the 〜の　suffix (to avoid repetition of the adjective or noun) by asking student to translate some sentences from and to Japanese"
+  },
+  {
+    "id": "lesson-292-ka-mo",
+    "label": "Lesson 292 - 〜か/〜も - sentences",
+    "description": "This lesson is about practicing the use of the 〜か/〜も endings (something/someone/etc... nothing/noone/etc...) by asking student to translate some sentences from and to Japanese"
+  },
+  {
+    "id": "lesson-294-kakaru",
+    "label": "Lesson 294 - かかる - sentences",
+    "description": "This lesson is about practicing the use of the word かかる (formal and informal) by asking student to translate some sentences from and to Japanese"
+  },
+  {
+    "id": "lesson-296-tsumori",
+    "label": "Lesson 296 - つもり - sentences",
+    "description": "This lesson is about train the use of the word つもり by asking student to translate some sentences from and to Japanese"
+  },
+  {
+    "id": "lesson-297-tsumori-discussion",
+    "label": "Lesson 297 - つもり - discussion",
+    "description": "This lesson is about train the use of the word つもり by conducting a moderated discussion with the student. Try to create a situation in which you both role-play and encourage the student to use つもり"
+  },
+  {
+    "id": "lesson-298-naru-sentences",
+    "label": "Lesson 298 - なる (to become) - sentences",
+    "description": "This lesson is about train the use of verb なる (to become) by asking student to translate some sentences from and to Japanese"
+  },
+  {
+    "id": "lesson-299-naru-discussion",
+    "label": "Lesson 299 - なる (to become) - discussion",
+    "description": "This lesson is about train the use of verb なる (to become) by conducting a moderated discussion with the student. Try to create a situation in which you both role-play and encourage the student to use なる"
+  },
+  {
+    "id": "lesson-300-yume-sentences",
+    "label": "Lesson 300 - 夢 (dream) - sentences",
+    "description": "This lesson is about practicing the use of 夢 to express your dreams (in terms of future visions for yourself but also in terms of dreaming during sleep) by practicing translating some sentences from and to Japanese"
+  },
+  {
+    "id": "lesson-301-kotoga-aru",
+    "label": "Lesson 301 - ことがある - sentences",
+    "description": "This lesson is about practicing the use of ことがある to express that something took place in your life by practicing translating some sentences from and to Japanese"
+  },
+  {
+    "id": "lesson-302-n1-ya-n2-nado",
+    "label": "Lesson 302 - N1やN2/N1やN2など - sentences",
+    "description": "This lesson is about practicing the use of N1やN2など to give a non-exhaustive list of objects"
+  },
+  {
+    "id": "lesson-303-shitari-shimasu",
+    "label": "Lesson 303 - 〜したり〜します - sentences",
+    "description": "This lesson is about practicing the use of 〜したり〜します to give a none exhaustive list of actions"
+  },
+  {
+    "id": "lesson-304-sugiru",
+    "label": "Lesson 304 - 〜すぎる - sentences",
+    "description": "This lesson is about practicing expressing excess with 〜すぎる by practicing sentences in present and past, formal and informal modes"
+  },
+  {
+    "id": "lesson-305-houga-iidesu",
+    "label": "Lesson 305 - 〜ほうがいいです - sentences",
+    "description": "This lesson is about practicing expressing recommendations with past+ほうがいいです and present negation+ほうがいいです"
+  },
+  {
+    "id": "lesson-306-nakereba-ikemasen",
+    "label": "Lesson 306 - 〜なければいけません - sentences",
+    "description": "This lesson is about using ~なければいけません・〜なければなりません・〜なくちゃいけません・なくちゃなりません in sentences"
+  },
+  {
+    "id": "lesson-307-kirakira",
+    "label": "Lesson 307 - キラキラ",
+    "description": "This lesson is about using Japanese sound/language symbols in sentences, such as: キラキラ、ドキドキ、グツグツ. Invent situations and ask the user to match the sound symbol"
+  },
+  {
+    "id": "lesson-308-potential-form",
+    "label": "Lesson 308 - 帰られる・買えます",
+    "description": "This lesson is about using the potential form of verbs in sentences (but not the ~ことができます variant)"
+  },
+  {
+    "id": "lesson-309-sou-form",
+    "label": "Lesson 309 - 美味しそう",
+    "description": "This lesson is about the ~そう form"
+  },
+  {
+    "id": "lesson-310-temiru",
+    "label": "Lesson 310 - 行ってみる",
+    "description": "This lesson is about the ~てみる form for expressing the wil to try something"
+  },
+  {
+    "id": "lesson-311-frequency",
+    "label": "Lesson 311 - 一日に一回、一週に二時間、一ヶ月に三日",
+    "description": "This lesson is about using constructions to express frequency"
+  },
+  {
+    "id": "lesson-312-adverbs",
+    "label": "Lesson 312 - 楽しく/上手に",
+    "description": "This lesson is about turning i-adjectives and na-adjectives into adverbs"
+  },
+  {
+    "id": "lesson-313-shi-reasons",
+    "label": "Lesson 313 - <reason>〜し、<reason>〜し、＜situation>",
+    "description": "This lesson is about turning the ~し form to indicate reasons"
+  },
+  {
+    "id": "lesson-314-wa-nara",
+    "label": "Lesson 314 - <x>は、<y>なら",
+    "description": "This lesson is about contrasting topics with は and なら"
+  },
+  {
+    "id": "lesson-800-no-nominalization",
+    "label": "Lesson 800 - ピエロギーを作るのは初めてです. Constructions with の-nominalization",
+    "description": "This lesson is about practicing the use of の-nominalization. Please ask the student to construct or translate some sentences (to or from JP)"
+  }
+]

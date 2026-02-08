@@ -16,3 +16,11 @@ class ConversationGoalsUpdate(BaseModel):
     daily_unit_target: int
 
     model_config = ConfigDict(extra="forbid")
+
+
+class GrammarTargetResponse(BaseModel):
+    id: str
+    label: str
+    description: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
