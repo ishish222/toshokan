@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "toshokan-goals"
+version = "0.1.0"
+description = "Daily goals module for Toshokan"
+authors = []
+packages = [{ include = "toshokan_goals" }]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+pytest = "^9.0.2"
+toshokan-platform = {path = "../../platform", develop = true}
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

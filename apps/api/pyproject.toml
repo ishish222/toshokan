@@ -14,6 +14,7 @@ dependencies = [
     "python-dotenv (>=1.2.1,<2.0.0)",
     "cryptography (>=46.0.4,<47.0.0)",
     "customer-accounts",
+    "toshokan-goals",
     "toshokan-platform",
 ]
 packages = [{include = "toshokan_api", from = "src"}]
@@ -25,6 +26,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 customer-accounts = {path = "../../packages/modules/customer_accounts", develop = true}
+toshokan-goals = {path = "../../packages/modules/toshokan_goals", develop = true}
 toshokan-platform = {path = "../../packages/platform", develop = true}
 
 [tool.poetry.group.dev.dependencies]

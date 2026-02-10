@@ -335,36 +335,6 @@ paths:
                   tokens: { type: integer, minimum: 0 }
                 required: [tokens]
 
-    parameters:
-      - name: customer_id
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
-      - $ref: "#/components/parameters/TargetId"
-    get:
-      tags: [Targets]
-      summary: Get target for customer
-      responses:
-        "200":
-          description: Target
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Target" }
-    patch:
-      tags: [Targets]
-      summary: Update target for customer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/TargetUpdate" }
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Target" }
-
   /daily-goals/today:
     get:
       tags: [DailyGoals]
@@ -426,13 +396,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Cognito-issued JWT. Tenant/customer account is derived from token.
-
-  parameters:
-    TargetId:
-      name: target_id
-      in: path
-      required: true
-      schema: { type: string, format: uuid }
 
   schemas:
     Problem:
@@ -569,36 +532,6 @@ components:
         customer_id: { type: string, format: uuid }
         email: { type: string, format: email }
       required: [customer_id, email]
-      additionalProperties: false
-
-    Target:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        customer_account_id: { type: string, format: uuid }
-        name: { type: string, minLength: 1 }
-        seed_uris:
-          type: array
-          items:
-            type: string
-            format: uri
-          minItems: 1
-        ownership_verified: { type: boolean }
-        ownership_verification_string: { type: string, nullable: true }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
-      required: [id, customer_account_id, name, seed_uris, ownership_verified, created_at, updated_at]
-
-    TargetUpdate:
-      type: object
-      properties:
-        name: { type: string, minLength: 1 }
-        seed_uris:
-          type: array
-          items:
-            type: string
-            format: uri
-          minItems: 1
       additionalProperties: false
 
     GoalProgress:

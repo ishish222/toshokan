@@ -56,7 +56,8 @@ class CustomerUsersService:
         self,
         user_id: UUID,
         email: Optional[str],
-        roles: Optional[list[str]],
+        timezone: Optional[str] = None,
+        roles: Optional[list[str]] = None,
     ) -> Optional[User]:
         user = self.users.get_user(user_id)
         if user is None:
@@ -64,6 +65,7 @@ class CustomerUsersService:
         updated = replace(
             user,
             email=email if email is not None else user.email,
+            timezone=timezone if timezone is not None else user.timezone,
             roles=roles if roles is not None else user.roles,
         )
         return self.users.update_user(updated)

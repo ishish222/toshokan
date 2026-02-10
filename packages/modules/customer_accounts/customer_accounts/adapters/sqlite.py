@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Iterable, Optional
 from uuid import UUID
 
-from navigator_platform.storage.helpers import dt_to_str, str_to_dt, list_to_json, list_from_json
+from toshokan_platform.storage.helpers import dt_to_str, str_to_dt, list_to_json, list_from_json
 
 from ..domain.entities import ContactData, Customer, Invitation, PostalAddress, User
 from ..ports.accounts import CustomerRepository, InvitationRepository, UserRepository
@@ -171,9 +171,10 @@ class SqliteUserRepository(UserRepository):
                 cognito_id,
                 email,
                 roles_json,
+                timezone,
                 created_at,
                 archived_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 str(user.id),
@@ -181,6 +182,7 @@ class SqliteUserRepository(UserRepository):
                 user.cognito_id,
                 user.email,
                 list_to_json(user.roles),
+                user.timezone,
                 dt_to_str(user.created_at),
                 dt_to_str(user.archived_at),
             ),
@@ -196,6 +198,7 @@ class SqliteUserRepository(UserRepository):
                 cognito_id = ?,
                 email = ?,
                 roles_json = ?,
+                timezone = ?,
                 created_at = ?,
                 archived_at = ?
             WHERE id = ?
@@ -205,6 +208,7 @@ class SqliteUserRepository(UserRepository):
                 user.cognito_id,
                 user.email,
                 list_to_json(user.roles),
+                user.timezone,
                 dt_to_str(user.created_at),
                 dt_to_str(user.archived_at),
                 str(user.id),
@@ -290,6 +294,7 @@ def _row_to_user(row: sqlite3.Row) -> User:
         roles=list_from_json(row["roles_json"]),
         created_at=str_to_dt(row["created_at"]),
         archived_at=str_to_dt(row["archived_at"]),
+        timezone=row["timezone"],
     )
 
 

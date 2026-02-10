@@ -6,6 +6,7 @@ from functools import lru_cache
 from typing import Optional
 
 from customer_accounts.config import CustomerAccountsConfig, get_config as get_ca_config
+from toshokan_goals.config import ToshokanGoalsConfig, get_config as get_goals_config
 
 
 DEFAULT_CORS_ORIGINS = [
@@ -42,12 +43,15 @@ class ApiConfig:
     module_ca_enabled: bool
     customer_accounts: Optional[CustomerAccountsConfig]
     module_nt_enabled: bool
+    module_goals_enabled: bool
+    toshokan_goals: Optional[ToshokanGoalsConfig]
 
 
 @lru_cache
 def get_config() -> ApiConfig:
     module_ca_enabled = _env_bool("MODULE_CA_ENABLED", True)
     module_nt_enabled = _env_bool("MODULE_NAVIGATOR_TESTS_ENABLED", True)
+    module_goals_enabled = _env_bool("MODULE_GOALS_ENABLED", True)
     return ApiConfig(
         api_prefix=os.getenv("API_PREFIX", "/v1"),
         cors_allow_origins=_split_env_list(os.getenv("CORS_ALLOW_ORIGINS"), DEFAULT_CORS_ORIGINS),
@@ -59,4 +63,6 @@ def get_config() -> ApiConfig:
         module_ca_enabled=module_ca_enabled,
         customer_accounts=get_ca_config() if module_ca_enabled else None,
         module_nt_enabled=module_nt_enabled,
+        module_goals_enabled=module_goals_enabled,
+        toshokan_goals=get_goals_config() if module_goals_enabled else None,
     )

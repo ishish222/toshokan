@@ -194,7 +194,7 @@ def create_router(service: CustomerUsersService, get_auth_context: Callable[...,
     )
     def update_user_by_id(user_id: UUID, payload: UserUpdate, auth: AuthContext = Depends(get_auth_context)) -> User:
         _require_backoffice(auth)
-        updated = service.update_user_by_id(user_id=user_id, email=payload.email, roles=payload.roles)
+        updated = service.update_user_by_id(user_id=user_id, email=payload.email, timezone=payload.timezone, roles=payload.roles)
         if updated is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         return _to_user(updated)
@@ -310,6 +310,7 @@ def _to_user(user: DomainUser) -> User:
         cognito_id=user.cognito_id,
         email=user.email,
         roles=user.roles or None,
+        timezone=user.timezone,
         created_at=user.created_at,
         archived_at=user.archived_at,
     )

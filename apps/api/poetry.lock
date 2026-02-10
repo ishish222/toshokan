@@ -668,6 +668,24 @@ typing-extensions = {version = ">=4.10.0", markers = "python_version < \"3.13\""
 full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.18)", "pyyaml"]
 
 [[package]]
+name = "toshokan-goals"
+version = "0.1.0"
+description = "Daily goals module for Toshokan"
+optional = false
+python-versions = ">=3.12,<4.0"
+groups = ["main"]
+files = []
+develop = true
+
+[package.dependencies]
+pytest = "^9.0.2"
+toshokan-platform = {path = "../../platform", develop = true}
+
+[package.source]
+type = "directory"
+url = "../../packages/modules/toshokan_goals"
+
+[[package]]
 name = "toshokan-platform"
 version = "0.1.0"
 description = "Cross-cutting infrastructure primitives (storage, helpers)"
@@ -731,4 +749,4 @@ standard = ["colorama (>=0.4) ; sys_platform == \"win32\"", "httptools (>=0.6.3)
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "7beb606b98f97ca7c3666730c8cf46f6f32fc5a0188083ec2a0c92c3fa3b1b9e"
+content-hash = "a83ed40d662bac4e7878b7c38d30eadd262c3c3a367a26131a85e303560aca6f"

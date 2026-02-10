@@ -26,6 +26,7 @@ def ensure_schema(connection: sqlite3.Connection) -> None:
             cognito_id TEXT NOT NULL,
             email TEXT NOT NULL,
             roles_json TEXT NOT NULL,
+            timezone TEXT,
             created_at TEXT NOT NULL,
             archived_at TEXT
         )
@@ -45,4 +46,19 @@ def ensure_schema(connection: sqlite3.Connection) -> None:
         """
     )
     connection.execute("CREATE INDEX IF NOT EXISTS idx_invitations_token ON invitations (token)")
+
+    # -- migrations for existing databases --
+    _add_column_if_missing(connection, "users", "timezone", "TEXT")
+
     connection.commit()
+
+
+def _add_column_if_missing(
+    connection: sqlite3.Connection,
+    table: str,
+    column: str,
+    col_type: str,
+) -> None:
+    columns = [row[1] for row in connection.execute(f"PRAGMA table_info({table})").fetchall()]
+    if column not in columns:
+        connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")

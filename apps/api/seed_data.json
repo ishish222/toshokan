@@ -38,11 +38,12 @@
                 "22222222-2222-2222-2222-222222222222"
             ],
             "cognito_id": "93f4b8d2-e0f1-70c3-253d-d3bf66d613c2",
-            "email": "tomasz.salacinski@korino.com",
+            "email": "tomasz.salacinski@gmail.com",
             "roles": [
                 "owner",
                 "backoffice"
-            ]
+            ],
+            "timezone": "Asia/Tokyo"
         },
         {
             "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -53,7 +54,8 @@
             "email": "demo@example.com",
             "roles": [
                 "owner"
-            ]
+            ],
+            "timezone": "America/New_York"
         }
     ],
     "invitations": []

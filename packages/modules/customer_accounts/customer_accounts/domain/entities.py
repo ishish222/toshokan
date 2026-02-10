@@ -55,6 +55,7 @@ class User:
     roles: list[str]
     created_at: datetime
     archived_at: Optional[datetime]
+    timezone: Optional[str] = None
 
     def archive(self, now: datetime) -> "User":
         return replace(self, archived_at=now)

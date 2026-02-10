@@ -56,12 +56,14 @@ class User(BaseModel):
     cognito_id: str
     email: str
     roles: Optional[List[str]] = None
+    timezone: Optional[str] = None
     created_at: datetime
     archived_at: Optional[datetime] = None
 
 
 class UserUpdate(BaseModel):
     email: Optional[str] = None
+    timezone: Optional[str] = None
     roles: Optional[List[str]] = None
 
     model_config = ConfigDict(extra="forbid")

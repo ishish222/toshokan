@@ -84,6 +84,7 @@ def _load_seed_data(seed_file_path: str, config: CustomerAccountsConfig) -> InMe
             roles=u.get("roles", []),
             created_at=now,
             archived_at=None,
+            timezone=u.get("timezone"),
         )
 
     for inv in data.get("invitations", []):
@@ -156,6 +157,7 @@ def create_store(config: CustomerAccountsConfig) -> InMemoryCustomerAccountsStor
         roles=["owner"],
         created_at=now,
         archived_at=None,
+        timezone="Asia/Tokyo",
     )
     invitation = Invitation(
         id=uuid4(),
@@ -268,6 +270,7 @@ class FakeIdentityProvisioning(IdentityProvisioning):
             roles=["owner"],
             created_at=now,
             archived_at=None,
+            timezone=None,
         )
         return ProvisionedCustomerUser(customer=customer, user=user)
 
@@ -282,4 +285,5 @@ class FakeIdentityProvisioning(IdentityProvisioning):
             roles=["member"],
             created_at=now,
             archived_at=None,
+            timezone=None,
         )
