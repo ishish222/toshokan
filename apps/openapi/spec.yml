@@ -1,0 +1,197 @@
+openapi: 3.1.0
+info:
+  title: Toshokan API
+  version: 0.1.0
+  description: |
+    Backend API for Toshokan (FastAPI). Auth via Cognito JWT; customer tenancy derived from JWT.
+servers:
+  - url: /api/v1
+
+security:
+  - CognitoJWT: []
+
+tags:
+  - name: Auth
+  - name: User
+
+paths:
+  /health:
+    get:
+      security: []
+      tags: [Auth]
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, const: ok }
+                required: [status]
+
+  /me:
+    get:
+      tags: [User]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /user:
+    get:
+      tags: [User]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+    delete:
+      tags: [User]
+      summary: Archive current user
+      responses:
+        "200":
+          description: Archived user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /user/register:
+    post:
+      tags: [User]
+      summary: Register user and create customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201":
+          description: Provisioned user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RegisterResponse" }
+
+  /users:
+    get:
+      tags: [User]
+      summary: List users
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/User" }
+
+  /users/{user_id}:
+    get:
+      tags: [User]
+      summary: Get user by id
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+    patch:
+      tags: [User]
+      summary: Update user by id
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UserUpdate" }
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+components:
+  securitySchemes:
+    CognitoJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito-issued JWT. Tenant/customer account is derived from token.
+
+  schemas:
+    ContactData:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        phone: { type: string }
+        address:
+          $ref: "#/components/schemas/PostalAddress"
+      additionalProperties: false
+
+    PostalAddress:
+      type: object
+      properties:
+        line1: { type: string }
+        line2: { type: string }
+        city: { type: string }
+        region: { type: string }
+        postal_code: { type: string }
+        country: { type: string, minLength: 2, maxLength: 2, description: ISO-3166-1 alpha-2 }
+      additionalProperties: false
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        customer_ids:
+          type: array
+          items: { type: string, format: uuid }
+        cognito_id: { type: string, minLength: 1 }
+        email: { type: string, format: email }
+        roles:
+          type: array
+          items: { type: string }
+          nullable: true
+        created_at: { type: string, format: date-time }
+        archived_at: { type: string, format: date-time, nullable: true }
+      required: [id, customer_ids, cognito_id, email, created_at]
+
+    UserUpdate:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        roles:
+          type: array
+          items: { type: string }
+      additionalProperties: false
+
+    RegisterRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        cognito_id: { type: string, minLength: 1 }
+      required: [email, cognito_id]
+      additionalProperties: false
+
+    RegisterResponse:
+      type: object
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+      required: [customer, user]
+
