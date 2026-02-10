@@ -5,7 +5,7 @@ import os
 from customer_accounts.api import create_router as create_customer_accounts_router
 from customer_accounts.wiring import CustomerAccountsComponents
 from customer_accounts.wiring import build as build_customer_accounts
-from navigator_platform.storage.sqlite import get_sqlite_connection
+from toshokan_platform.storage.sqlite import get_sqlite_connection
 
 from .config import get_config
 

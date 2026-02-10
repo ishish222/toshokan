@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: Toshokan API
+  title: Navigator API
   version: 0.1.0
   description: |
-    Backend API for Toshokan (FastAPI). Auth via Cognito JWT
+    Backend API for Navigator (FastAPI). Auth via Cognito JWT; customer tenancy derived from JWT.
 servers:
   - url: /api/v1
 
@@ -13,6 +13,8 @@ security:
 tags:
   - name: Auth
   - name: User
+  - name: Customer
+  - name: Invitations
   - name: DailyGoals
 
 paths:
@@ -66,7 +68,7 @@ paths:
   /user/register:
     post:
       tags: [User]
-      summary: Register user
+      summary: Register user and create customer
       requestBody:
         required: true
         content:
@@ -74,10 +76,134 @@ paths:
             schema: { $ref: "#/components/schemas/RegisterRequest" }
       responses:
         "201":
-          description: Provisioned user
+          description: Provisioned user and customer
           content:
             application/json:
               schema: { $ref: "#/components/schemas/RegisterResponse" }
+
+  /invitations:
+    post:
+      tags: [Invitations]
+      summary: Invite user to customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvitationCreateRequest" }
+      responses:
+        "201":
+          description: Invitation created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invitation" }
+
+  /invitations/accept:
+    post:
+      tags: [Invitations]
+      summary: Accept invitation token and register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvitationAcceptRequest" }
+      responses:
+        "201":
+          description: Registered user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /customer:
+    get:
+      tags: [Customer]
+      summary: Get customer metadata (mostly Stripe-linked)
+      description: |
+        Stripe is source of truth for billing/tax/contact. This endpoint returns what we store/cached.
+      responses:
+        "200":
+          description: Customer metadata
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Customer" }
+    patch:
+      tags: [Customer]
+      summary: Update locally-stored customer fields (optional)
+      description: |
+        Use this only for non-billing fields you want cached in Navigator.
+        Billing/tax/contact should typically be updated in Stripe.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Customer" }
+    delete:
+      tags: [Customer]
+      summary: Archive current customer
+      responses:
+        "200":
+          description: Archived customer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Customer" }
+        "409":
+          description: Customer still has active users
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /customers/{customer_id}:
+    get:
+      tags: [Customer]
+      summary: Get customer by id
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Customer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Customer" }
+    patch:
+      tags: [Customer]
+      summary: Update customer by id
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerUpdate" }
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Customer" }
+
+  /customers:
+    get:
+      tags: [Customer]
+      summary: List customers
+      responses:
+        "200":
+          description: Customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Customer" }
 
   /users:
     get:
@@ -127,13 +253,139 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/User" }
 
+  /customer/tokens:
+    get:
+      tags: [Customer]
+      summary: Get token balance
+      responses:
+        "200":
+          description: Token balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokens: { type: integer, minimum: 0 }
+                required: [tokens]
+
+  /customers/{customer_id}/tokens/credit:
+    post:
+      tags: [Customer]
+      summary: Credit customer token balance
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TokenBalanceUpdate" }
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Customer" }
+
+  /customers/{customer_id}/tokens/debit:
+    post:
+      tags: [Customer]
+      summary: Debit customer token balance
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TokenBalanceUpdate" }
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Customer" }
+        "409":
+          description: Insufficient tokens
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /customers/{customer_id}/tokens:
+    get:
+      tags: [Customer]
+      summary: Get customer token balance
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Token balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokens: { type: integer, minimum: 0 }
+                required: [tokens]
+
+    parameters:
+      - name: customer_id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - $ref: "#/components/parameters/TargetId"
+    get:
+      tags: [Targets]
+      summary: Get target for customer
+      responses:
+        "200":
+          description: Target
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Target" }
+    patch:
+      tags: [Targets]
+      summary: Update target for customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TargetUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Target" }
+
+  /daily-goals/today:
+    get:
+      tags: [DailyGoals]
+      summary: Get today's daily goal status for the current user
+      description: |
+        Returns the current day's goal status with a per-goal breakdown.
+        "Current day" is determined by the user's timezone.
+      responses:
+        "200":
+          description: Today's daily goal status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DailyGoalToday" }
+
   /daily-goals/calendar:
     get:
       tags: [DailyGoals]
       summary: Get daily goal calendar for the current user
       description: |
-        Returns daily goal statuses for the requested date range and the
-        user's current streak. Days not yet evaluated are omitted from items.
+        Returns daily goal results for a date range, used to render the
+        red/green calendar. Days not yet evaluated are omitted from items.
       parameters:
         - name: from
           in: query
@@ -152,15 +404,77 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/DailyGoalCalendar" }
 
+  /daily-goals/streak:
+    get:
+      tags: [DailyGoals]
+      summary: Get current streak for the current user
+      description: |
+        Returns the current streak, calculated as the length of the
+        continuous chain of achieved daily goals ending at the most
+        recent completed day.
+      responses:
+        "200":
+          description: Current streak info
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StreakInfo" }
+
 components:
   securitySchemes:
     CognitoJWT:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Cognito-issued JWT.
+      description: Cognito-issued JWT. Tenant/customer account is derived from token.
+
+  parameters:
+    TargetId:
+      name: target_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
 
   schemas:
+    Problem:
+      type: object
+      additionalProperties: true
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string, format: uri }
+      required: [title, status]
+
+    Customer:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        stripe_customer_id: { type: string, minLength: 1 }
+        tokens: { type: integer, minimum: 0 }
+        name: { type: string, nullable: true }
+        contact:
+          $ref: "#/components/schemas/ContactData"
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        archived_at: { type: string, format: date-time, nullable: true }
+      required: [id, stripe_customer_id, tokens, created_at, updated_at]
+
+    CustomerUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        contact:
+          $ref: "#/components/schemas/ContactData"
+      additionalProperties: false
+
+    TokenBalanceUpdate:
+      type: object
+      properties:
+        amount: { type: integer, minimum: 1 }
+      required: [amount]
+      additionalProperties: false
+
     ContactData:
       type: object
       properties:
@@ -185,6 +499,9 @@ components:
       type: object
       properties:
         id: { type: string, format: uuid }
+        customer_ids:
+          type: array
+          items: { type: string, format: uuid }
         cognito_id: { type: string, minLength: 1 }
         email: { type: string, format: email }
         roles:
@@ -193,11 +510,11 @@ components:
           nullable: true
         timezone:
           type: string
-          description: IANA timezone (e.g. "Asia/Tokyo")
-          example: Asia/Tokyo
+          description: IANA timezone identifier (e.g. Asia/Tokyo)
+          minLength: 1
         created_at: { type: string, format: date-time }
         archived_at: { type: string, format: date-time, nullable: true }
-      required: [id, cognito_id, email, timezone, created_at]
+      required: [id, customer_ids, cognito_id, email, timezone, created_at]
 
     UserUpdate:
       type: object
@@ -205,11 +522,24 @@ components:
         email: { type: string, format: email }
         timezone:
           type: string
-          description: IANA timezone (e.g. "Asia/Tokyo")
+          description: IANA timezone identifier (e.g. Asia/Tokyo)
+          minLength: 1
         roles:
           type: array
           items: { type: string }
       additionalProperties: false
+
+    Invitation:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        customer_id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        token: { type: string, minLength: 1 }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        accepted_at: { type: string, format: date-time, nullable: true }
+      required: [id, customer_id, email, token, created_at, expires_at]
 
     RegisterRequest:
       type: object
@@ -222,11 +552,100 @@ components:
     RegisterResponse:
       type: object
       properties:
+        customer: { $ref: "#/components/schemas/Customer" }
         user: { $ref: "#/components/schemas/User" }
-      required: [user]
+      required: [customer, user]
 
-    DailyGoalStatus:
+    InvitationAcceptRequest:
       type: object
+      properties:
+        token: { type: string, minLength: 1 }
+      required: [token]
+      additionalProperties: false
+
+    InvitationCreateRequest:
+      type: object
+      properties:
+        customer_id: { type: string, format: uuid }
+        email: { type: string, format: email }
+      required: [customer_id, email]
+      additionalProperties: false
+
+    Target:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        customer_account_id: { type: string, format: uuid }
+        name: { type: string, minLength: 1 }
+        seed_uris:
+          type: array
+          items:
+            type: string
+            format: uri
+          minItems: 1
+        ownership_verified: { type: boolean }
+        ownership_verification_string: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      required: [id, customer_account_id, name, seed_uris, ownership_verified, created_at, updated_at]
+
+    TargetUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        seed_uris:
+          type: array
+          items:
+            type: string
+            format: uri
+          minItems: 1
+      additionalProperties: false
+
+    GoalProgress:
+      type: object
+      description: Progress for a single module-provided goal on a given day.
+      properties:
+        goal_type:
+          type: string
+          description: Module-provided key (e.g. "grammar", "kanji")
+        label:
+          type: string
+          description: Human-readable goal name
+        achieved: { type: boolean }
+        current:
+          type: integer
+          minimum: 0
+          description: Current progress count
+        target:
+          type: integer
+          minimum: 1
+          description: Target count required to achieve this goal
+      required: [goal_type, label, achieved, current, target]
+
+    DailyGoalToday:
+      type: object
+      description: Today's daily goal status with per-goal breakdown.
+      properties:
+        date:
+          type: string
+          format: date
+          description: The user-local date
+        achieved:
+          type: boolean
+          description: True if all specific goals are met
+        goals:
+          type: array
+          items: { $ref: "#/components/schemas/GoalProgress" }
+          description: Per-module goal breakdown
+        streak:
+          type: integer
+          minimum: 0
+          description: Current streak as of the previous completed day
+      required: [date, achieved, goals, streak]
+
+    DailyGoalDay:
+      type: object
+      description: Single calendar entry for a completed day.
       properties:
         date: { type: string, format: date }
         achieved: { type: boolean }
@@ -234,13 +653,19 @@ components:
 
     DailyGoalCalendar:
       type: object
+      description: Daily goal results for a date range.
       properties:
         items:
           type: array
-          items: { $ref: "#/components/schemas/DailyGoalStatus" }
+          items: { $ref: "#/components/schemas/DailyGoalDay" }
+      required: [items]
+
+    StreakInfo:
+      type: object
+      description: Current streak information.
+      properties:
         current_streak:
           type: integer
           minimum: 0
-          description: Length of the current continuous chain of achieved daily goals.
-      required: [items, current_streak]
-
+          description: Consecutive achieved days ending at the most recent completed day
+      required: [current_streak]

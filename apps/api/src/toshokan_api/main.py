@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .auth import AuthProvider, CognitoAuthProvider, HeaderAuthProvider, auth_middleware, get_auth_context
 from .api import health
 from .config import get_config
-from .wiring import build_customer_accounts_components, build_customer_accounts_router, build_navigator_tests_router
+from .wiring import build_customer_accounts_components, build_customer_accounts_router
 
 load_dotenv(find_dotenv())
 
@@ -45,10 +45,6 @@ def create_app(
         {"name": "User"},
         {"name": "Customer"},
         {"name": "Invitations"},
-        {"name": "Targets"},
-        {"name": "Credentials"},
-        {"name": "Tests"},
-        {"name": "Reports"},
     ]
     config = get_config()
     app = FastAPI(title="Navigator API", openapi_tags=openapi_tags)
@@ -66,8 +62,8 @@ def create_app(
     app.middleware("http")(auth_middleware)
     app.include_router(health.router, prefix=api_prefix)
     app.include_router(build_customer_accounts_router(components.service, get_auth_context), prefix=api_prefix)
-    if config.module_nt_enabled:
-        app.include_router(build_navigator_tests_router(get_auth_context), prefix=api_prefix)
+    # if config.module_nt_enabled:
+    #     app.include_router(build_navigator_tests_router(get_auth_context), prefix=api_prefix)
     return app
 
 

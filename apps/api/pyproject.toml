@@ -1,5 +1,5 @@
 [project]
-name = "navigator-api"
+name = "toshokan-api"
 version = "0.1.0"
 description = ""
 authors = [
@@ -13,11 +13,10 @@ dependencies = [
     "pyjwt (>=2.11.0,<3.0.0)",
     "python-dotenv (>=1.2.1,<2.0.0)",
     "cryptography (>=46.0.4,<47.0.0)",
-    "customer-accounts @ file:///Users/tsalacinski/Projects/2026-02-08-navigator-2/ai-navigator/packages/modules/customer_accounts",
-    "navigator-tests @ file:///Users/tsalacinski/Projects/2026-02-08-navigator-2/ai-navigator/packages/modules/navigator_tests",
-    "navigator-platform @ file:///Users/tsalacinski/Projects/2026-02-08-navigator-2/ai-navigator/packages/platform",
+    "customer-accounts",
+    "toshokan-platform",
 ]
-packages = [{include = "navigator_api", from = "src"}]
+packages = [{include = "toshokan_api", from = "src"}]
 
 
 [build-system]
@@ -25,9 +24,8 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
-customer-accounts = {develop = true}
-navigator-tests = {develop = true}
-navigator-platform = {develop = true}
+customer-accounts = {path = "../../packages/modules/customer_accounts", develop = true}
+toshokan-platform = {path = "../../packages/platform", develop = true}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"

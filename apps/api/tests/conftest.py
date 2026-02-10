@@ -7,8 +7,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from navigator_api.auth import AuthContext, get_auth_context
-from navigator_api.main import create_app
+from toshokan_api.auth import AuthContext, get_auth_context
+from toshokan_api.main import create_app
 
 
 def _default_customer_ids(store) -> list[UUID]:
@@ -32,7 +32,7 @@ def _client_for(app: FastAPI, auth: AuthContext) -> TestClient:
 @pytest.fixture
 def app_base() -> FastAPI:
     import os
-    from navigator_api.config import get_config
+    from toshokan_api.config import get_config
     # Force in-memory backend and clear seed data for test isolation
     os.environ["API_STORAGE_BACKEND"] = "memory"
     os.environ.pop("SEED_DATA_PATH", None)
