@@ -6,10 +6,11 @@
 
  * OpenAPI spec version: 0.1.0
  */
-import type { PagedResponseMeta } from './pagedResponseMeta';
-import type { Target } from './target';
 
-export interface PagedTargets {
-  items: Target[];
-  meta: PagedResponseMeta;
+/**
+ * Single calendar entry for a completed day.
+ */
+export interface DailyGoalDay {
+  date: string;
+  achieved: boolean;
 }

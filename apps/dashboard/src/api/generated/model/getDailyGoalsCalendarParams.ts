@@ -7,7 +7,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type PostTargetsTargetIdOwnershipVerify200 = {
-  verified: boolean;
-  checked_at: string;
+export type GetDailyGoalsCalendarParams = {
+/**
+ * Start of range (inclusive)
+ */
+from: string;
+/**
+ * End of range (inclusive)
+ */
+to: string;
 };

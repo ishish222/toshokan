@@ -6,7 +6,11 @@
 
  * OpenAPI spec version: 0.1.0
  */
+import type { DailyGoalDay } from './dailyGoalDay';
 
-export interface PagedResponseMeta {
-  next_cursor: string | null;
+/**
+ * Daily goal results for a date range.
+ */
+export interface DailyGoalCalendar {
+  items: DailyGoalDay[];
 }

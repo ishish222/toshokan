@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Navigator Dashboard",
-  description: "Navigator security testing dashboard",
+  title: "Toshokan",
+  description: "Toshokan — your daily Japanese learning companion",
 };
 
 export default function RootLayout({
@@ -36,4 +36,3 @@ export default function RootLayout({
     </html>
   );
 }
-

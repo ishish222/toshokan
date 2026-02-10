@@ -9,5 +9,10 @@
 
 export interface UserUpdate {
   email?: string;
+  /**
+   * IANA timezone identifier (e.g. Asia/Tokyo)
+   * @minLength 1
+   */
+  timezone?: string;
   roles?: string[];
 }

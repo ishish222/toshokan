@@ -7,7 +7,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface TestDecisionAnswer {
-  /** @minLength 1 */
-  answer: string;
+/**
+ * Current streak information.
+ */
+export interface StreakInfo {
+  /**
+   * Consecutive achieved days ending at the most recent completed day
+   * @minimum 0
+   */
+  current_streak: number;
 }

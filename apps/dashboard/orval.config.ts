@@ -1,7 +1,7 @@
 import { defineConfig } from "orval";
 
 export default defineConfig({
-  navigator: {
+  toshokan: {
     input: {
       target: "../api/openapi/spec.yml",
     },

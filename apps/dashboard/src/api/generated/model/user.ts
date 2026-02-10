@@ -14,6 +14,11 @@ export interface User {
   cognito_id: string;
   email: string;
   roles?: string[] | null;
+  /**
+   * IANA timezone identifier (e.g. Asia/Tokyo)
+   * @minLength 1
+   */
+  timezone: string;
   created_at: string;
   archived_at?: string | null;
 }
