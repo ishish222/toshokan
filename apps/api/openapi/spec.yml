@@ -3,7 +3,7 @@ info:
   title: Toshokan API
   version: 0.1.0
   description: |
-    Backend API for Toshokan (FastAPI). Auth via Cognito JWT; customer tenancy derived from JWT.
+    Backend API for Toshokan (FastAPI). Auth via Cognito JWT
 servers:
   - url: /api/v1
 
@@ -13,6 +13,7 @@ security:
 tags:
   - name: Auth
   - name: User
+  - name: DailyGoals
 
 paths:
   /health:
@@ -65,7 +66,7 @@ paths:
   /user/register:
     post:
       tags: [User]
-      summary: Register user and create customer
+      summary: Register user
       requestBody:
         required: true
         content:
@@ -126,13 +127,38 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/User" }
 
+  /daily-goals/calendar:
+    get:
+      tags: [DailyGoals]
+      summary: Get daily goal calendar for the current user
+      description: |
+        Returns daily goal statuses for the requested date range and the
+        user's current streak. Days not yet evaluated are omitted from items.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date }
+          description: Start of range (inclusive)
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date }
+          description: End of range (inclusive)
+      responses:
+        "200":
+          description: Daily goal calendar
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DailyGoalCalendar" }
+
 components:
   securitySchemes:
     CognitoJWT:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Cognito-issued JWT. Tenant/customer account is derived from token.
+      description: Cognito-issued JWT.
 
   schemas:
     ContactData:
@@ -159,23 +185,27 @@ components:
       type: object
       properties:
         id: { type: string, format: uuid }
-        customer_ids:
-          type: array
-          items: { type: string, format: uuid }
         cognito_id: { type: string, minLength: 1 }
         email: { type: string, format: email }
         roles:
           type: array
           items: { type: string }
           nullable: true
+        timezone:
+          type: string
+          description: IANA timezone (e.g. "Asia/Tokyo")
+          example: Asia/Tokyo
         created_at: { type: string, format: date-time }
         archived_at: { type: string, format: date-time, nullable: true }
-      required: [id, customer_ids, cognito_id, email, created_at]
+      required: [id, cognito_id, email, timezone, created_at]
 
     UserUpdate:
       type: object
       properties:
         email: { type: string, format: email }
+        timezone:
+          type: string
+          description: IANA timezone (e.g. "Asia/Tokyo")
         roles:
           type: array
           items: { type: string }
@@ -193,5 +223,24 @@ components:
       type: object
       properties:
         user: { $ref: "#/components/schemas/User" }
-      required: [customer, user]
+      required: [user]
+
+    DailyGoalStatus:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        achieved: { type: boolean }
+      required: [date, achieved]
+
+    DailyGoalCalendar:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DailyGoalStatus" }
+        current_streak:
+          type: integer
+          minimum: 0
+          description: Length of the current continuous chain of achieved daily goals.
+      required: [items, current_streak]
 
